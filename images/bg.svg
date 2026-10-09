@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="520" height="520" viewBox="0 0 520 520" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Seamless tile of children's doodles; its opacity is set in styles.css -->
+  <g stroke="#f5b400">
+    <polygon transform="translate(60 70) rotate(-12)" points="0,-26 6.5,-8.9 24.7,-8 10.5,3.4 15.3,21 0,11 -15.3,21 -10.5,3.4 -24.7,-8 -6.5,-8.9"/>
+    <g transform="translate(62 322)">
+      <circle r="13"/>
+      <path d="M0,-21V-29M0,21V29M-21,0H-29M21,0H29M-15,-15L-20,-20M15,15L20,20M-15,15L-20,20M15,-15L20,-20"/>
+    </g>
+    <polygon transform="translate(462 332) rotate(15) scale(0.6)" points="0,-26 6.5,-8.9 24.7,-8 10.5,3.4 15.3,21 0,11 -15.3,21 -10.5,3.4 -24.7,-8 -6.5,-8.9"/>
+  </g>
+  <g stroke="#3aa0e8">
+    <path transform="translate(200 58)" d="M-24,14a13,13 0 0 1 0,-26a17,17 0 0 1 32,-5a14,14 0 0 1 16,31z"/>
+    <path transform="translate(196 330) rotate(-8)" d="M-28,-4L28,-22L6,24L-2,6ZM28,-22L-2,6"/>
+    <path transform="translate(268 452) scale(0.8)" d="M-24,14a13,13 0 0 1 0,-26a17,17 0 0 1 32,-5a14,14 0 0 1 16,31z"/>
+  </g>
+  <g stroke="#9b7bea">
+    <g transform="translate(332 80) rotate(35)">
+      <rect x="-7" y="-30" width="14" height="44" rx="2"/>
+      <path d="M-7,14L0,30L7,14M-7,-20H7"/>
+    </g>
+    <g transform="translate(396 455) rotate(-35)">
+      <rect x="-7" y="-30" width="14" height="44" rx="2"/>
+      <path d="M-7,14L0,30L7,14M-7,-20H7"/>
+    </g>
+  </g>
+  <g stroke="#4cc38a">
+    <g transform="translate(456 62)">
+      <circle r="21"/>
+      <path d="M-15,-15Q0,0 -15,15M15,-15Q0,0 15,15"/>
+    </g>
+    <g transform="translate(402 200) rotate(-10)">
+      <rect x="-23" y="-23" width="46" height="46" rx="8"/>
+      <path d="M-10,-11L10,12M9,-12L3,2M-4,-3L-9,12"/>
+    </g>
+    <g transform="translate(120 455) rotate(12)">
+      <rect x="-23" y="-23" width="46" height="46" rx="8"/>
+      <path d="M-9,-10H5Q9,-10 9,-6V11M-12,11H13"/>
+    </g>
+  </g>
+  <g stroke="#ff8fb8">
+    <g transform="translate(125 190) rotate(-15)">
+      <path d="M0,-30L19,-5L0,26L-19,-5ZM0,-30V26M-19,-5H19"/>
+      <path d="M0,26q8,8 0,16q-8,8 0,16"/>
+    </g>
+  </g>
+  <g stroke="#ff7a59">
+    <path transform="translate(265 186) rotate(10)" d="M0,20C-30,-2 -14,-26 0,-10C14,-26 30,-2 0,20Z"/>
+    <g transform="translate(330 312) rotate(8)">
+      <ellipse cy="-8" rx="18" ry="22"/>
+      <path d="M-4,18L0,14L4,18ZM0,18q6,9 0,18q-6,9 0,16"/>
+    </g>
+  </g>
+  <g stroke="#8b8da8" stroke-width="2.5">
+    <path d="M262,108v12M256,114h12M30,198v12M24,204h12M468,256v12M462,262h12M196,400v12M190,406h12M330,388v12M324,394h12"/>
+    <circle cx="130" cy="100" r="3"/><circle cx="395" cy="118" r="3"/><circle cx="208" cy="250" r="3"/>
+    <circle cx="128" cy="372" r="3"/><circle cx="462" cy="408" r="3"/><circle cx="40" cy="430" r="3"/>
+  </g>
+</svg>

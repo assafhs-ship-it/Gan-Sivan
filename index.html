@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#bfe6ff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>הגן של סיון</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><g fill='none' stroke-width='11'><path d='M6,78 A44,44 0 0 1 94,78' stroke='%23f25c54'/><path d='M17,78 A33,33 0 0 1 83,78' stroke='%23ffd23f'/><path d='M28,78 A22,22 0 0 1 72,78' stroke='%233aa0e8'/></g></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=0.3">
+</head>
+<body>
+
+  <!-- Landing page: menu of exercises -->
+  <section id="home" class="screen">
+    <header class="hero">
+      <svg class="hero-rainbow" viewBox="0 0 200 124" aria-hidden="true">
+        <g fill="none" stroke-width="12.5">
+          <path d="M10,104 A90,90 0 0 1 190,104" stroke="#f25c54"/>
+          <path d="M22,104 A78,78 0 0 1 178,104" stroke="#ff9f43"/>
+          <path d="M34,104 A66,66 0 0 1 166,104" stroke="#ffd23f"/>
+          <path d="M46,104 A54,54 0 0 1 154,104" stroke="#4cc38a"/>
+          <path d="M58,104 A42,42 0 0 1 142,104" stroke="#3aa0e8"/>
+          <path d="M70,104 A30,30 0 0 1 130,104" stroke="#9b7bea"/>
+        </g>
+        <g fill="#ffffff">
+          <circle cx="16" cy="108" r="13"/><circle cx="34" cy="100" r="17"/><circle cx="54" cy="107" r="14"/><rect x="16" y="106" width="38" height="15" rx="7"/>
+          <circle cx="146" cy="107" r="14"/><circle cx="166" cy="100" r="17"/><circle cx="184" cy="108" r="13"/><rect x="146" y="106" width="38" height="15" rx="7"/>
+        </g>
+      </svg>
+      <h1>הגן של סיון</h1>
+      <p class="hero-sub">במה נשחק היום?</p>
+    </header>
+
+    <nav class="menu" aria-label="תרגילים">
+      <a class="menu-card" href="#letters">
+        <span class="menu-icon" aria-hidden="true">✏️</span>
+        <span class="menu-title">כתיבת אותיות</span>
+      </a>
+      <a class="menu-card menu-blue" href="#order">
+        <span class="menu-icon" aria-hidden="true">🧩</span>
+        <span class="menu-title">השלמת סדר אותיות</span>
+      </a>
+      <a class="menu-card menu-green" href="#first">
+        <span class="menu-icon" aria-hidden="true">🍎</span>
+        <span class="menu-title">מה מתחיל ב...</span>
+      </a>
+    </nav>
+
+    <footer class="version">
+      <div>© 2026 אסף חובבי ציון · כל הזכויות שמורות</div>
+      <div>גרסה <span id="version"></span></div>
+    </footer>
+  </section>
+
+  <!-- Letter picker -->
+  <section id="letters" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#" aria-label="לדף הבית">🏠</a>
+      <h2>כתיבת אותיות</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <p class="hint">בוחרים אות</p>
+    <div id="letter-grid" class="letter-grid"></div>
+  </section>
+
+  <!-- Tracing exercise -->
+  <section id="trace" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#letters" aria-label="חזרה לכל האותיות">✖</a>
+      <h2 id="trace-title">כתיבת אותיות</h2>
+      <button class="btn btn-round" id="speak-btn" type="button" aria-label="השמעת שם האות">🔊</button>
+    </div>
+
+    <div class="board-wrap">
+      <div class="board" id="board">
+        <div class="name-banner" id="name-banner" hidden></div>
+      </div>
+    </div>
+
+    <div class="bottombar">
+      <a class="btn btn-nav" id="prev-btn" href="#letters" aria-label="האות הקודמת">➡</a>
+      <button class="btn btn-erase" id="erase-btn" type="button">🧽 מחיקה</button>
+      <a class="btn btn-nav" id="next-btn" href="#letters" aria-label="האות הבאה">⬅</a>
+    </div>
+  </section>
+
+  <!-- Letter order: pick how many letters are missing -->
+  <section id="order" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#" aria-label="לדף הבית">🏠</a>
+      <h2>השלמת סדר אותיות</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <p class="hint">כמה אותיות חסרות?</p>
+    <div class="level-menu">
+      <a class="level-card" href="#order-1" aria-label="אות אחת חסרה">
+        <span class="level-num">1</span>
+        <span class="level-demo" aria-hidden="true"><i>א</i><i class="q">?</i><i>ג</i><i>ד</i></span>
+      </a>
+      <a class="level-card" href="#order-2" aria-label="שתי אותיות חסרות">
+        <span class="level-num">2</span>
+        <span class="level-demo" aria-hidden="true"><i>א</i><i class="q">?</i><i>ג</i><i class="q">?</i></span>
+      </a>
+    </div>
+  </section>
+
+  <!-- Letter order: the game -->
+  <section id="order-game" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#order" aria-label="חזרה">✖</a>
+      <h2>השלמת סדר אותיות</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <div class="dots" id="order-dots" aria-hidden="true"></div>
+    <div class="order-play" id="order-play">
+      <div class="order-options" id="order-options"></div>
+      <div class="order-seq" id="order-seq"></div>
+    </div>
+    <div class="order-done" id="order-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="order-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- First letter: pick how many pictures to choose from -->
+  <section id="first" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#" aria-label="לדף הבית">🏠</a>
+      <h2>מה מתחיל ב...</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <p class="hint">כמה תמונות?</p>
+    <div class="level-menu">
+      <a class="level-card" href="#first-2" aria-label="שתי תמונות">
+        <span class="level-num">2</span>
+        <span class="level-demo" aria-hidden="true"><i>🍎</i><i>🎈</i></span>
+      </a>
+      <a class="level-card" href="#first-3" aria-label="שלוש תמונות">
+        <span class="level-num">3</span>
+        <span class="level-demo" aria-hidden="true"><i>🍎</i><i>🎈</i><i>🐟</i></span>
+      </a>
+      <a class="level-card" href="#first-4" aria-label="ארבע תמונות">
+        <span class="level-num">4</span>
+        <span class="level-demo" aria-hidden="true"><i>🍎</i><i>🎈</i><i>🐟</i><i>🌙</i></span>
+      </a>
+    </div>
+  </section>
+
+  <!-- First letter: the game -->
+  <section id="first-game" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#first" aria-label="חזרה">✖</a>
+      <h2 id="first-title">מה מתחיל ב...</h2>
+      <button class="btn btn-round" id="first-speak" type="button" aria-label="השמעת שם האות">🔊</button>
+    </div>
+    <div class="dots" id="first-dots" aria-hidden="true"></div>
+    <div class="order-play" id="first-play">
+      <div class="first-board">
+        <div class="first-letter" id="first-letter"></div>
+        <div class="first-slot" id="first-slot"></div>
+      </div>
+      <div class="first-choices" id="first-choices"></div>
+    </div>
+    <div class="order-done" id="first-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="first-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Review sheet of all letters and their stroke order (open with #all) -->
+  <section id="all" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#" aria-label="לדף הבית">🏠</a>
+      <h2>כל האותיות</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <div id="all-grid" class="all-grid"></div>
+  </section>
+
+  <script src="script.js?v=0.3"></script>
+</body>
+</html>
