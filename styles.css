@@ -151,7 +151,12 @@ body::before {
 .menu-grid .menu-card { flex: 0 0 calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols)); min-height: clamp(130px, 22dvh, 200px); }
 .menu-grid .menu-icon { font-size: clamp(3rem, 9vw, 4.2rem); }
 .menu-grid .menu-title { font-size: clamp(1.3rem, 3.4vw, 1.9rem); text-align: center; }
-@media (min-width: 600px) { .menu-grid { --cols: 3; } }
+@media (min-width: 600px) {
+  .menu-grid { --cols: 3; }
+  /* seven exercises: rows of four and three, rather than three, three and one */
+  .menu-grid.menu-cols-4 { --cols: 4; }
+  .menu-grid.menu-cols-4 .menu-title { font-size: clamp(1.2rem, 2.5vw, 1.7rem); }
+}
 
 .menu-icon-text { font-size: clamp(3.2rem, 10vw, 4.6rem); letter-spacing: 0.06em; }
 .menu-card.menu-purple { background: var(--purple); box-shadow: 0 8px 0 #7556c9; }
@@ -905,6 +910,65 @@ button.obj { cursor: pointer; touch-action: manipulation; }
   line-height: 1;
 }
 .add-slot.filled { border-style: solid; border-color: var(--green); background: #e6f8ee; color: var(--green-dark); animation: pop 0.4s ease; }
+
+/* ---------- Song button ---------- */
+
+#home { position: relative; }
+.song-btn {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  inset-inline-start: 16px;
+  z-index: 2;
+  width: clamp(64px, 11vw, 84px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 4px solid var(--white);
+  border-radius: 50%;
+  background: linear-gradient(145deg, #ff8fb8, var(--coral));
+  color: var(--white);
+  box-shadow: 0 6px 0 rgba(43, 45, 91, 0.2);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.song-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(43, 45, 91, 0.2); }
+.song-btn:focus-visible { outline: 4px solid var(--navy); outline-offset: 3px; }
+
+/* resting: the note sways now and then to invite a tap */
+.song-note { width: 56%; fill: currentColor; transform-origin: 50% 90%; animation: note-sway 3.2s ease-in-out infinite; }
+
+/* playing: dancing bars, a ring that ripples outwards, and notes drifting away */
+.song-bars { display: none; align-items: flex-end; justify-content: center; gap: 9%; width: 54%; height: 46%; }
+.song-bars i { flex: 1; height: 100%; border-radius: 99px; background: currentColor; transform-origin: bottom; animation: bar-dance 0.9s ease-in-out infinite; }
+.song-bars i:nth-child(2) { animation-duration: 0.6s; animation-delay: -0.2s; }
+.song-bars i:nth-child(3) { animation-duration: 0.75s; animation-delay: -0.45s; }
+.song-bars i:nth-child(4) { animation-duration: 1.05s; animation-delay: -0.1s; }
+.song-btn.playing .song-note { display: none; }
+.song-btn.playing .song-bars { display: flex; }
+.song-btn.playing::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 4px solid var(--coral);
+  animation: ring-out 1.6s ease-out infinite;
+}
+.song-float { position: absolute; top: 60%; left: 50%; font-size: 1.6rem; line-height: 1; color: var(--coral); opacity: 0; pointer-events: none; }
+.song-btn.playing .song-float { animation: note-drift 2.4s ease-out infinite; }
+.song-float:nth-of-type(2) { --dx: 34px; color: var(--purple); }
+.song-float:nth-of-type(3) { --dx: 78px; color: var(--blue); }
+.song-btn.playing .song-float:nth-of-type(2) { animation-delay: 0.8s; }
+.song-btn.playing .song-float:nth-of-type(3) { animation-delay: 1.6s; }
+
+@keyframes note-sway { 0%, 60%, 100% { transform: rotate(0); } 70% { transform: rotate(-14deg); } 80% { transform: rotate(12deg); } 90% { transform: rotate(-6deg); } }
+@keyframes bar-dance { 0%, 100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
+@keyframes ring-out { from { transform: scale(1); opacity: 0.8; } to { transform: scale(1.6); opacity: 0; } }
+@keyframes note-drift {
+  0% { transform: translate(0, 0) rotate(0); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translate(var(--dx, -6px), 90px) rotate(20deg); opacity: 0; }
+}
 
 /* ---------- Confetti ---------- */
 

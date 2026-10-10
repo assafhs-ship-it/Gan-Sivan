@@ -10,12 +10,21 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=1.1">
+  <link rel="stylesheet" href="styles.css?v=1.2">
 </head>
 <body>
 
   <!-- Landing page: the two subjects -->
   <section id="home" class="screen">
+    <!-- The kindergarten's song: tap to play, tap again to stop -->
+    <button class="song-btn" id="song-btn" type="button" aria-pressed="false" aria-label="לנגן את השיר של הגן">
+      <svg class="song-note" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="6.5" cy="18" r="3.2"/><circle cx="17" cy="16" r="3.2"/>
+        <path d="M7.7 18V5.4L20.2 2.8V16h-2V6.9L9.7 8.6V18z"/>
+      </svg>
+      <span class="song-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span class="song-float" aria-hidden="true">♪</span><span class="song-float" aria-hidden="true">♫</span><span class="song-float" aria-hidden="true">♪</span>
+    </button>
     <header class="hero">
       <div class="hero-art">
       <svg class="hero-rainbow" viewBox="0 0 200 124" aria-hidden="true">
@@ -109,7 +118,7 @@
       <h2>מספרים</h2>
       <span class="topbar-spacer"></span>
     </div>
-    <nav class="menu menu-grid" aria-label="תרגילי מספרים">
+    <nav class="menu menu-grid menu-cols-4" aria-label="תרגילי מספרים">
       <a class="menu-card" href="#digits">
         <span class="menu-icon" aria-hidden="true">✏️</span>
         <span class="menu-title">כתיבת מספרים</span>
@@ -665,6 +674,6 @@
     <div id="all-grid" class="all-grid"></div>
   </section>
 
-  <script src="script.js?v=1.1"></script>
+  <script src="script.js?v=1.2"></script>
 </body>
 </html>

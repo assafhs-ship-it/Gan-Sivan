@@ -1,4 +1,4 @@
-const APP_VERSION = '1.1';
+const APP_VERSION = '1.2';
 
 // Each letter is drawn on a 200x200 board. `strokes` are SVG paths, in the
 // order the child writes them; each path runs in the writing direction.
@@ -1386,6 +1386,34 @@ function pickAdd(btn) {
   }, 2000);
 }
 
+// ---------- Song ----------
+
+// The kindergarten's song plays on the landing page only, so it never talks over an exercise.
+// It is streamed by an <audio> element rather than decoded like the short clips.
+const song = new Audio('audio/song.m4a');
+song.preload = 'none';
+
+function showSong(playing) {
+  const btn = $('song-btn');
+  btn.classList.toggle('playing', playing);
+  btn.setAttribute('aria-pressed', playing);
+  btn.setAttribute('aria-label', playing ? 'לעצור את השיר' : 'לנגן את השיר של הגן');
+}
+
+function stopSong() {
+  song.pause();
+  try { song.currentTime = 0; } catch {}
+  showSong(false);
+}
+
+function toggleSong() {
+  if (!song.paused) { stopSong(); return; }
+  showSong(true);
+  song.play().catch(() => showSong(false));
+}
+
+song.addEventListener('ended', () => showSong(false));
+
 // ---------- Screens ----------
 
 function renderGrid() {
@@ -1413,6 +1441,7 @@ function show(id) {
 
 function route() {
   const hash = location.hash.slice(1);
+  if (hash && !song.paused) stopSong();
   const m = hash.match(/^letter-(\d+)$/);
   const level = hash.match(/^order-([12])$/);
   const pictures = hash.match(/^first-([234])$/);
@@ -1602,6 +1631,7 @@ $('add-cards').addEventListener('click', e => {
   const btn = e.target.closest('.namecard');
   if (btn) pickAdd(btn);
 });
+$('song-btn').addEventListener('click', toggleSong);
 $('speak-btn').addEventListener('click', () => {
   if (trace) play(trace.audio, trace.letter.name);
 });
