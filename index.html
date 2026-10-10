@@ -10,13 +10,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=0.3">
+  <link rel="stylesheet" href="styles.css?v=0.9">
 </head>
 <body>
 
-  <!-- Landing page: menu of exercises -->
+  <!-- Landing page: the two subjects -->
   <section id="home" class="screen">
     <header class="hero">
+      <div class="hero-art">
       <svg class="hero-rainbow" viewBox="0 0 200 124" aria-hidden="true">
         <g fill="none" stroke-width="12.5">
           <path d="M10,104 A90,90 0 0 1 190,104" stroke="#f25c54"/>
@@ -31,11 +32,37 @@
           <circle cx="146" cy="107" r="14"/><circle cx="166" cy="100" r="17"/><circle cx="184" cy="108" r="13"/><rect x="146" y="106" width="38" height="15" rx="7"/>
         </g>
       </svg>
+      <div class="hero-avatar"><img src="images/sivan.png" alt="סיון" width="520" height="672"></div>
+      </div>
       <h1>הגן של סיון</h1>
       <p class="hero-sub">במה נשחק היום?</p>
     </header>
 
-    <nav class="menu" aria-label="תרגילים">
+    <nav class="menu" aria-label="נושאים">
+      <a class="menu-card" href="#abc">
+        <span class="menu-icon menu-icon-text" aria-hidden="true">אבג</span>
+        <span class="menu-title">אותיות</span>
+      </a>
+      <a class="menu-card menu-purple" href="#numbers">
+        <span class="menu-icon menu-icon-text" aria-hidden="true" dir="ltr">123</span>
+        <span class="menu-title">מספרים</span>
+      </a>
+    </nav>
+
+    <footer class="version">
+      <div>© 2026 אסף חובבי ציון · כל הזכויות שמורות</div>
+      <div>גרסה <span id="version"></span></div>
+    </footer>
+  </section>
+
+  <!-- Letters: menu of exercises -->
+  <section id="abc" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#" aria-label="לדף הבית">🏠</a>
+      <h2>אותיות</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <nav class="menu menu-grid" aria-label="תרגילי אותיות">
       <a class="menu-card" href="#letters">
         <span class="menu-icon" aria-hidden="true">✏️</span>
         <span class="menu-title">כתיבת אותיות</span>
@@ -48,18 +75,44 @@
         <span class="menu-icon" aria-hidden="true">🍎</span>
         <span class="menu-title">מה מתחיל ב...</span>
       </a>
+      <a class="menu-card menu-purple" href="#names">
+        <span class="menu-icon" aria-hidden="true">🔊</span>
+        <span class="menu-title">שמות האותיות</span>
+      </a>
+      <a class="menu-card menu-yellow" href="#find">
+        <span class="menu-icon" aria-hidden="true">🔍</span>
+        <span class="menu-title">מצא את האות</span>
+      </a>
+      <a class="menu-card menu-pink" href="#memory">
+        <span class="menu-icon" aria-hidden="true">🃏</span>
+        <span class="menu-title">זיכרון אותיות</span>
+      </a>
+      <a class="menu-card menu-teal" href="#pop">
+        <span class="menu-icon" aria-hidden="true">🎈</span>
+        <span class="menu-title">פוצצו את הבלונים</span>
+      </a>
     </nav>
+  </section>
 
-    <footer class="version">
-      <div>© 2026 אסף חובבי ציון · כל הזכויות שמורות</div>
-      <div>גרסה <span id="version"></span></div>
-    </footer>
+  <!-- Numbers: menu of exercises (none yet) -->
+  <section id="numbers" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#" aria-label="לדף הבית">🏠</a>
+      <h2>מספרים</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <div class="menu">
+      <div class="menu-card soon">
+        <span class="menu-icon" aria-hidden="true">🎁</span>
+        <span class="menu-title">בקרוב...</span>
+      </div>
+    </div>
   </section>
 
   <!-- Letter picker -->
   <section id="letters" class="screen" hidden>
     <div class="topbar">
-      <a class="btn btn-round" href="#" aria-label="לדף הבית">🏠</a>
+      <a class="btn btn-round" href="#abc" aria-label="חזרה לאותיות">✖</a>
       <h2>כתיבת אותיות</h2>
       <span class="topbar-spacer"></span>
     </div>
@@ -91,7 +144,7 @@
   <!-- Letter order: pick how many letters are missing -->
   <section id="order" class="screen" hidden>
     <div class="topbar">
-      <a class="btn btn-round" href="#" aria-label="לדף הבית">🏠</a>
+      <a class="btn btn-round" href="#abc" aria-label="חזרה לאותיות">✖</a>
       <h2>השלמת סדר אותיות</h2>
       <span class="topbar-spacer"></span>
     </div>
@@ -133,7 +186,7 @@
   <!-- First letter: pick how many pictures to choose from -->
   <section id="first" class="screen" hidden>
     <div class="topbar">
-      <a class="btn btn-round" href="#" aria-label="לדף הבית">🏠</a>
+      <a class="btn btn-round" href="#abc" aria-label="חזרה לאותיות">✖</a>
       <h2>מה מתחיל ב...</h2>
       <span class="topbar-spacer"></span>
     </div>
@@ -179,6 +232,167 @@
     </div>
   </section>
 
+  <!-- Letter names: pick how many letters to choose from -->
+  <section id="names" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#abc" aria-label="חזרה לאותיות">✖</a>
+      <h2>שמות האותיות</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <p class="hint">כמה אותיות?</p>
+    <div class="level-menu">
+      <a class="level-card" href="#names-2" aria-label="שתי אותיות">
+        <span class="level-num">2</span>
+        <span class="level-demo" aria-hidden="true"><i>א</i><i>ב</i></span>
+      </a>
+      <a class="level-card" href="#names-3" aria-label="שלוש אותיות">
+        <span class="level-num">3</span>
+        <span class="level-demo" aria-hidden="true"><i>א</i><i>ב</i><i>ג</i></span>
+      </a>
+      <a class="level-card" href="#names-4" aria-label="ארבע אותיות">
+        <span class="level-num">4</span>
+        <span class="level-demo" aria-hidden="true"><i>א</i><i>ב</i><i>ג</i><i>ד</i></span>
+      </a>
+    </div>
+  </section>
+
+  <!-- Letter names: the game -->
+  <section id="names-game" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#names" aria-label="חזרה">✖</a>
+      <h2>שמות האותיות</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <div class="dots" id="names-dots" aria-hidden="true"></div>
+    <div class="order-play" id="names-play">
+      <button class="say-btn" id="names-speak" type="button" aria-label="להשמיע שוב את שם האות">🔊</button>
+      <div class="name-cards" id="names-cards"></div>
+    </div>
+    <div class="order-done" id="names-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="names-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Find the letter -->
+  <section id="find" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#abc" aria-label="חזרה לאותיות">✖</a>
+      <h2>מצא את האות</h2>
+      <button class="btn btn-round" id="find-speak" type="button" aria-label="השמעת שם האות">🔊</button>
+    </div>
+    <div class="dots" id="find-dots" aria-hidden="true"></div>
+    <div class="order-play" id="find-play">
+      <div class="find-target">
+        <div class="find-letter" id="find-letter"></div>
+        <div class="find-marks" id="find-marks" aria-hidden="true"></div>
+      </div>
+      <div class="find-tiles" id="find-tiles"></div>
+    </div>
+    <div class="order-done" id="find-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="find-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Memory: pick how many cards -->
+  <section id="memory" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#abc" aria-label="חזרה לאותיות">✖</a>
+      <h2>זיכרון אותיות</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <p class="hint">כמה קלפים?</p>
+    <div class="level-menu">
+      <a class="level-card" href="#memory-6" aria-label="שישה קלפים">
+        <span class="level-num">6</span>
+        <span class="level-demo level-demo-mini" style="--c: 3" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+      </a>
+      <a class="level-card" href="#memory-8" aria-label="שמונה קלפים">
+        <span class="level-num">8</span>
+        <span class="level-demo level-demo-mini" style="--c: 4" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+      </a>
+      <a class="level-card" href="#memory-12" aria-label="שנים עשר קלפים">
+        <span class="level-num">12</span>
+        <span class="level-demo level-demo-mini" style="--c: 4" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+      </a>
+    </div>
+  </section>
+
+  <!-- Memory: the game -->
+  <section id="memory-game" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#memory" aria-label="חזרה">✖</a>
+      <h2>זיכרון אותיות</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <div class="dots" id="memory-dots" aria-hidden="true"></div>
+    <div class="order-play memory-play" id="memory-play">
+      <div class="memory-grid" id="memory-grid"></div>
+    </div>
+    <div class="order-done" id="memory-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="memory-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Balloons: pick the speed -->
+  <section id="pop" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#abc" aria-label="חזרה לאותיות">✖</a>
+      <h2>פוצצו את הבלונים</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <p class="hint">לאט או מהר?</p>
+    <div class="level-menu">
+      <a class="level-card" href="#pop-1" aria-label="לאט">
+        <span class="level-num level-emoji" aria-hidden="true">🐢</span>
+        <span class="level-demo" aria-hidden="true"><i>🎈</i></span>
+      </a>
+      <a class="level-card" href="#pop-2" aria-label="מהר">
+        <span class="level-num level-emoji" aria-hidden="true">🐇</span>
+        <span class="level-demo" aria-hidden="true"><i>🎈</i><i>🎈</i><i>🎈</i></span>
+      </a>
+    </div>
+  </section>
+
+  <!-- Balloons: the game -->
+  <section id="pop-game" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#pop" aria-label="חזרה">✖</a>
+      <h2>פוצצו את הבלונים</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <div class="dots" id="pop-dots" aria-hidden="true"></div>
+    <div class="pop-play" id="pop-play">
+      <div class="pop-head">
+        <button class="say-btn say-btn-small" id="pop-speak" type="button" aria-label="להשמיע שוב את שם האות">🔊</button>
+        <div class="find-marks" id="pop-marks" aria-hidden="true"></div>
+      </div>
+      <div class="pop-sky" id="pop-sky"></div>
+    </div>
+    <div class="order-done" id="pop-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="pop-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
   <!-- Review sheet of all letters and their stroke order (open with #all) -->
   <section id="all" class="screen" hidden>
     <div class="topbar">
@@ -189,6 +403,6 @@
     <div id="all-grid" class="all-grid"></div>
   </section>
 
-  <script src="script.js?v=0.3"></script>
+  <script src="script.js?v=0.9"></script>
 </body>
 </html>

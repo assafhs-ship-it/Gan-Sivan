@@ -87,7 +87,33 @@ body::before {
 /* ---------- Landing page ---------- */
 
 .hero { text-align: center; padding-top: 4vh; }
-.hero-rainbow { display: block; width: clamp(180px, 36vw, 300px); margin: 0 auto; filter: drop-shadow(0 4px 0 rgba(43, 45, 91, 0.1)); animation: float 4s ease-in-out infinite; }
+/* Sivan's portrait stands in a round frame in front of the rainbow, her head rising out of the top */
+.hero-art { --w: clamp(220px, 42vw, 330px); position: relative; width: var(--w); margin: 0 auto calc(var(--w) * 0.05); animation: float 4s ease-in-out infinite; }
+.hero-rainbow { display: block; width: 100%; filter: drop-shadow(0 4px 0 rgba(43, 45, 91, 0.1)); }
+.hero-avatar {
+  --d: calc(var(--w) * 0.5);
+  position: absolute;
+  bottom: calc(var(--w) * -0.05);
+  left: 50%;
+  width: var(--d);
+  height: calc(var(--d) * 1.3);
+  translate: -50% 0;
+  border-radius: 0 0 calc(var(--d) / 2) calc(var(--d) / 2);   /* the bottom follows the round frame exactly */
+  overflow: hidden;
+}
+.hero-avatar::before, .hero-avatar::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: var(--d);
+  height: var(--d);
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+.hero-avatar::before { background: linear-gradient(180deg, #e3f4ff, #ffffff); border: 5px solid var(--white); box-shadow: 0 0 0 2px rgba(43, 45, 91, 0.12) inset; }
+.hero-avatar::after { border: 5px solid var(--white); clip-path: inset(50% 0 0 0); }   /* the frame's front edge, over her shoulders */
+.hero-avatar img { position: absolute; bottom: 0; left: 50%; width: 88%; height: auto; translate: -50% 0; }
 .hero h1 { margin: 8px 0 0; font-size: clamp(2.6rem, 9vw, 4.5rem); font-weight: 400; color: var(--navy); }
 .hero-sub { margin: 6px 0 0; font-size: clamp(1.3rem, 4vw, 1.8rem); }
 
@@ -118,6 +144,20 @@ body::before {
 .menu-card:active { transform: translateY(6px); box-shadow: 0 2px 0 var(--coral-dark); }
 .menu-icon { font-size: 5rem; line-height: 1; }
 .menu-title { font-size: clamp(1.8rem, 5vw, 2.4rem); }
+
+/* A menu of several exercises: two columns, then three, then four as the screen widens */
+.menu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.menu-grid .menu-card { min-height: clamp(130px, 22dvh, 200px); }
+.menu-grid .menu-icon { font-size: clamp(3rem, 9vw, 4.2rem); }
+.menu-grid .menu-title { font-size: clamp(1.3rem, 3.4vw, 1.9rem); text-align: center; }
+@media (min-width: 600px) { .menu-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 900px) { .menu-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+.menu-icon-text { font-size: clamp(3.2rem, 10vw, 4.6rem); letter-spacing: 0.06em; }
+.menu-card.menu-purple { background: var(--purple); box-shadow: 0 8px 0 #7556c9; }
+.menu-card.menu-purple:active { box-shadow: 0 2px 0 #7556c9; }
+.menu-card.soon { background: rgba(255, 255, 255, 0.7); color: #8b8da8; box-shadow: none; border: 4px dashed #c3c6dd; cursor: default; max-width: 420px; width: 100%; justify-self: center; }
+.menu-card.soon:active { transform: none; }
 
 .version { text-align: center; font-size: 1rem; line-height: 1.6; color: #6c6e8c; }
 
@@ -432,6 +472,286 @@ body::before {
 .pic.used { visibility: hidden; }
 .pic.shake { animation: shake 0.4s ease; }
 
+/* ---------- Letter names ---------- */
+
+#names-game { height: 100dvh; min-height: 0; --tile: clamp(70px, 20vw, 200px); }
+
+.say-btn {
+  align-self: center;
+  width: clamp(100px, 22vw, 150px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--yellow);
+  box-shadow: 0 7px 0 var(--yellow-dark);
+  font: inherit;
+  font-size: clamp(2.8rem, 9vw, 4.2rem);
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+.say-btn:active { box-shadow: 0 2px 0 var(--yellow-dark); }
+.say-btn:focus-visible, .namecard:focus-visible { outline: 4px solid var(--navy); outline-offset: 3px; }
+
+.name-cards { display: flex; justify-content: center; gap: clamp(10px, 3vw, 28px); }
+.namecard {
+  position: relative;
+  width: var(--tile);
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 6px solid var(--frame);
+  border-radius: 26px;
+  background: var(--white);
+  color: var(--navy);
+  font: inherit;
+  font-size: calc(var(--tile) * 0.62);
+  line-height: 1;
+  box-shadow: 0 7px 0 rgba(43, 45, 91, 0.2);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.namecard span { position: absolute; bottom: 5%; inset-inline-start: 7%; font-size: calc(var(--tile) * 0.19); }
+.namecard:nth-child(1) { --frame: var(--coral); }
+.namecard:nth-child(2) { --frame: var(--blue); }
+.namecard:nth-child(3) { --frame: #f5b400; }
+.namecard:nth-child(4) { --frame: var(--purple); }
+.namecard.shake { animation: shake 0.4s ease; }
+.namecard.off { opacity: 0.35; cursor: default; }
+.namecard.right { --frame: var(--green); background: #e6f8ee; transform: scale(1.1); }
+
+/* ---------- Find the letter ---------- */
+
+.menu-card.menu-yellow { background: #f5b400; box-shadow: 0 8px 0 #c98f00; }
+.menu-card.menu-yellow:active { box-shadow: 0 2px 0 #c98f00; }
+
+#find { height: 100dvh; min-height: 0; }
+
+.find-target { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.find-letter {
+  min-width: 1.5em;
+  padding: 0.08em 0.3em 0.12em;
+  background: var(--white);
+  border: 5px solid var(--navy);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 0 rgba(43, 45, 91, 0.15);
+  color: var(--coral);
+  font-size: min(30vw, 26dvh);
+  line-height: 1.1;
+  text-align: center;
+  cursor: pointer;
+}
+.find-marks { display: flex; gap: 12px; }
+.find-marks i { width: 26px; aspect-ratio: 1; border-radius: 50%; border: 3px dashed var(--red); }
+.find-marks i.on { border-style: solid; background: var(--red); }
+
+.find-tiles {
+  align-self: center;
+  width: min(100%, 900px);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(8px, 2vw, 14px);
+}
+.findtile {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 4px solid #c3c6dd;
+  border-radius: 18px;
+  background: var(--white);
+  color: var(--ink);
+  font: inherit;
+  font-size: min(11vw, 8dvh);
+  line-height: 1;
+  box-shadow: 0 5px 0 rgba(43, 45, 91, 0.18);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.findtile:focus-visible { outline: 4px solid var(--navy); outline-offset: 3px; }
+.findtile.shake { animation: shake 0.4s ease; }
+.findtile.found { cursor: default; }
+.findtile.found::after {
+  content: '';
+  position: absolute;
+  inset: 5%;
+  border: 5px solid var(--red);
+  border-radius: 50%;
+  rotate: -14deg;
+  scale: 1 0.8;
+  animation: pop 0.3s ease;
+}
+.find-tiles.cheer .findtile.found { animation: hop 0.5s ease; }
+
+@media (min-width: 700px) {
+  .find-tiles { grid-template-columns: repeat(8, 1fr); }
+  .findtile { font-size: min(6.5vw, 4rem); }
+}
+
+/* ---------- Memory ---------- */
+
+.menu-card.menu-pink { background: var(--pink); box-shadow: 0 8px 0 #d9608c; }
+.menu-card.menu-pink:active { box-shadow: 0 2px 0 #d9608c; }
+
+.level-demo-mini { display: grid; grid-template-columns: repeat(var(--c), 28px); gap: 6px; }
+.level-demo-mini i { width: 28px; border-radius: 8px; background: var(--purple); }
+
+#memory-game { height: 100dvh; min-height: 0; }
+.memory-play { justify-content: center; align-items: center; }
+
+/* Cards are as big as the screen allows, in both directions */
+.memory-grid {
+  --gap: clamp(8px, 2vw, 16px);
+  --size: min(
+    calc((min(100vw, 960px) - 32px - (var(--cols) - 1) * var(--gap)) / var(--cols)),
+    calc((100dvh - 170px - (var(--rows) - 1) * var(--gap)) / var(--rows)),
+    200px);
+  display: grid;
+  grid-template-columns: repeat(var(--cols), var(--size));
+  gap: var(--gap);
+}
+.memcard {
+  width: var(--size);
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+  perspective: 700px;
+  touch-action: manipulation;
+}
+.memcard:focus-visible { outline: 4px solid var(--navy); outline-offset: 3px; border-radius: 22px; }
+.memcard-inner {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.4s ease;
+}
+.memcard.open .memcard-inner { transform: rotateY(180deg); }
+.memcard-back, .memcard-front {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 22px;
+  line-height: 1;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  box-shadow: 0 6px 0 rgba(43, 45, 91, 0.2);
+}
+.memcard-back { background: var(--purple); border: 5px solid var(--white); font-size: calc(var(--size) * 0.4); }
+.memcard-front {
+  background: var(--white);
+  border: 5px solid var(--blue);
+  color: var(--navy);
+  font-size: calc(var(--size) * 0.6);
+  transform: rotateY(180deg);
+  transition: background 0.3s ease 0.4s, border-color 0.3s ease 0.4s;
+}
+.memcard.matched { cursor: default; }
+.memcard.matched .memcard-front { background: #e6f8ee; border-color: var(--green); }
+
+/* ---------- Balloons ---------- */
+
+.menu-card.menu-teal { background: #2bb5b0; box-shadow: 0 8px 0 #1d8f8a; }
+.menu-card.menu-teal:active { box-shadow: 0 2px 0 #1d8f8a; }
+
+.level-emoji { background: var(--sky); font-size: 2.8rem; }
+
+#pop-game { height: 100dvh; min-height: 0; }
+.pop-play { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding-top: 10px; }
+.pop-play[hidden] { display: none; }
+.pop-head { display: flex; align-items: center; justify-content: center; gap: 18px; }
+.say-btn-small { width: clamp(64px, 12vw, 84px); font-size: clamp(1.8rem, 5vw, 2.4rem); box-shadow: 0 5px 0 var(--yellow-dark); }
+
+.pop-sky {
+  --b: clamp(62px, 13vw, 112px);
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: linear-gradient(180deg, #d9f1ff, #ffffff);
+  border: 5px solid var(--navy);
+  border-radius: var(--radius);
+  touch-action: none;
+}
+
+/* The balloon starts just below the sky and rises past its top */
+.balloon {
+  position: absolute;
+  top: 100%;
+  width: var(--b);
+  height: calc(var(--b) * 1.2);
+  margin-inline-start: 0;
+  margin-left: calc(var(--b) / -2);
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+  animation: rise linear forwards;
+}
+.balloon-body {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50% 50% 50% 50% / 44% 44% 56% 56%;
+  background: radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.75) 0 7%, transparent 22%), var(--color);
+  color: var(--white);
+  font-size: calc(var(--b) * 0.56);
+  line-height: 1;
+  animation: sway 2.6s ease-in-out infinite alternate;
+}
+.balloon-body::before {   /* string */
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 2px;
+  height: calc(var(--b) * 0.5);
+  background: #9a9cb5;
+}
+.balloon-body::after {    /* knot */
+  content: '';
+  position: absolute;
+  top: calc(100% - 3px);
+  left: 50%;
+  translate: -50% 0;
+  border: calc(var(--b) * 0.06) solid transparent;
+  border-top-width: 0;
+  border-bottom: calc(var(--b) * 0.09) solid var(--color);
+}
+.balloon-body { --color: var(--coral); }
+.balloon[style*="--hue: 1"] .balloon-body { --color: var(--blue); }
+.balloon[style*="--hue: 2"] .balloon-body { --color: var(--green); }
+.balloon[style*="--hue: 3"] .balloon-body { --color: var(--purple); }
+.balloon[style*="--hue: 4"] .balloon-body { --color: #f25c9a; }
+.balloon[style*="--hue: 5"] .balloon-body { --color: #f39a1f; }
+.balloon.wobble .balloon-body { animation: sway 2.6s ease-in-out infinite alternate, shake 0.4s ease; }
+.balloon.popped { pointer-events: none; }
+.balloon.popped .balloon-body { animation: burst 0.25s ease-out forwards; }
+.balloon.away { pointer-events: none; opacity: 0; transition: opacity 0.6s ease; }
+
+@keyframes rise { to { transform: translateY(calc(-1 * var(--travel) - var(--b) * 1.9)); } }
+@keyframes sway { from { transform: translateX(-7px) rotate(-3deg); } to { transform: translateX(7px) rotate(3deg); } }
+@keyframes burst { to { transform: scale(1.6); opacity: 0; } }
+
 /* ---------- Confetti ---------- */
 
 .confetti {
@@ -458,5 +778,6 @@ body::before {
 @keyframes pop { from { transform: scale(0.3); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
 @media (prefers-reduced-motion: reduce) {
-  * { animation: none !important; }
+  /* the balloons game cannot work without its balloons rising */
+  *:not(.balloon) { animation: none !important; }
 }

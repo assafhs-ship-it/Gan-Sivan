@@ -1,4 +1,4 @@
-const APP_VERSION = '0.3';
+const APP_VERSION = '0.9';
 
 // Each letter is drawn on a 200x200 board. `strokes` are SVG paths, in the
 // order the child writes them; each path runs in the writing direction.
@@ -160,6 +160,22 @@ function boop() {
   osc.connect(gain).connect(ctx.destination);
   osc.start(now);
   osc.stop(now + 0.25);
+}
+
+// A short burst of noise for a popping balloon.
+function popSound() {
+  const ctx = getAudio();
+  if (!ctx) return;
+  const length = Math.floor(ctx.sampleRate * 0.09);
+  const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / length) ** 3;
+  const src = ctx.createBufferSource();
+  const gain = ctx.createGain();
+  src.buffer = buffer;
+  gain.gain.value = 0.5;
+  src.connect(gain).connect(ctx.destination);
+  src.start();
 }
 
 // ---------- Confetti ----------
@@ -603,6 +619,334 @@ function finishFirst() {
   play('bravo', 'כל הכבוד');
 }
 
+// ---------- Letter names ----------
+
+const NAMES_ROUNDS = 5;
+
+let names = null;
+
+// `level` is how many letters there are to choose from.
+function startNames(level) {
+  names = { level, round: 0, used: [], letter: -1, locked: false };
+  $('names-done').hidden = true;
+  $('names-play').hidden = false;
+  preload('bravo');
+  nextNamesRound();
+}
+
+function nextNamesRound() {
+  const n = names;
+  const all = LETTERS.map((_, i) => i);
+  n.letter = pickOne(all.filter(i => !n.used.includes(i)));
+  n.used.push(n.letter);
+  n.locked = false;
+
+  const others = shuffle(all.filter(i => i !== n.letter)).slice(0, n.level - 1);
+  const choices = shuffle([n.letter, ...others]);
+
+  renderDots('names-dots', n.round, NAMES_ROUNDS);
+  $('names-cards').innerHTML = choices.map(i =>
+    `<button class="namecard" type="button" data-letter="${i}">${LETTERS[i].ch}<span aria-hidden="true">${WORDS[i][0][1]}</span></button>`).join('');
+
+  choices.forEach(i => preload(letterAudio(i)));
+  setTimeout(() => { if (names === n && !n.locked) sayName(); }, 400);
+}
+
+function sayName() {
+  if (names) play(letterAudio(names.letter), LETTERS[names.letter].name);
+}
+
+function pickName(btn) {
+  const n = names;
+  if (!n || n.locked || btn.classList.contains('off')) return;
+
+  if (+btn.dataset.letter !== n.letter) {
+    boop();
+    btn.classList.add('shake', 'off');   // a wrong letter is taken out of the round
+    setTimeout(() => { if (names === n && !n.locked) sayName(); }, 700);
+    return;
+  }
+
+  n.locked = true;
+  n.round++;
+  btn.classList.add('right');
+  $('names-cards').querySelectorAll('.namecard:not(.right)').forEach(card => card.classList.add('off'));
+  ding();
+  setTimeout(() => { if (names === n) sayName(); }, 350);
+  renderDots('names-dots', n.round, NAMES_ROUNDS);
+  setTimeout(() => {
+    if (names !== n) return;
+    if (n.round >= NAMES_ROUNDS) finishNames();
+    else nextNamesRound();
+  }, 2000);
+}
+
+function finishNames() {
+  $('names-play').hidden = true;
+  $('names-done').hidden = false;
+  confetti();
+  play('bravo', 'כל הכבוד');
+}
+
+// ---------- Find the letter ----------
+
+const FIND_ROUNDS = 5;
+const FIND_TILES = 8;
+const FINAL_LETTERS = ['ך', 'ם', 'ן', 'ף', 'ץ'];   // only ever shown as wrong tiles
+// Letters that look alike; a couple of them are mixed in among the wrong tiles.
+const LOOK_ALIKE = ['בכפ', 'דרך', 'החת', 'וז', 'גנ', 'סם', 'עצץ', 'טמ', 'יו', 'פף', 'כך', 'נן', 'מם'];
+// Pairs too close to tell apart in the site's rounded font; never shown together.
+const TOO_ALIKE = ['ון'];
+
+let find = null;
+
+function startFind() {
+  find = { round: 0, used: [], letter: -1, left: 0, total: 0, locked: false };
+  $('find-done').hidden = true;
+  $('find-play').hidden = false;
+  preload('bravo');
+  nextFindRound();
+}
+
+function nextFindRound() {
+  const f = find;
+  f.letter = pickOne(LETTERS.map((_, i) => i).filter(i => !f.used.includes(i)));
+  f.used.push(f.letter);
+  f.total = f.left = pickOne([3, 4]);
+  f.locked = false;
+
+  const ch = LETTERS[f.letter].ch;
+  const alike = [...new Set(LOOK_ALIKE.filter(g => g.includes(ch)).join(''))].filter(c => c !== ch);
+  const banned = TOO_ALIKE.filter(pair => pair.includes(ch)).join('');
+  const rest = [...LETTERS.map(l => l.ch), ...FINAL_LETTERS]
+    .filter(c => c !== ch && !alike.includes(c) && !banned.includes(c));
+  const wrong = [...shuffle(alike).slice(0, 2), ...shuffle(rest)].slice(0, FIND_TILES - f.total);
+  const tiles = shuffle([...Array(f.total).fill(ch), ...wrong]);
+
+  renderDots('find-dots', f.round, FIND_ROUNDS);
+  renderDots('find-marks', 0, f.total);
+  $('find-letter').textContent = ch;
+  $('find-tiles').classList.remove('cheer');
+  $('find-tiles').innerHTML = tiles.map(c => `<button class="findtile" type="button">${c}</button>`).join('');
+
+  preload(letterAudio(f.letter));
+  setTimeout(() => { if (find === f && !f.locked) sayFindLetter(); }, 400);
+}
+
+function sayFindLetter() {
+  if (find) play(letterAudio(find.letter), LETTERS[find.letter].name);
+}
+
+function pickFind(btn) {
+  const f = find;
+  if (!f || f.locked || btn.classList.contains('found')) return;
+
+  if (btn.textContent !== LETTERS[f.letter].ch) {
+    boop();
+    btn.classList.remove('shake');
+    void btn.offsetWidth;
+    btn.classList.add('shake');
+    return;
+  }
+
+  btn.classList.add('found');
+  f.left--;
+  ding();
+  renderDots('find-marks', f.total - f.left, f.total);
+  if (f.left > 0) return;
+
+  f.locked = true;
+  f.round++;
+  renderDots('find-dots', f.round, FIND_ROUNDS);
+  $('find-tiles').classList.add('cheer');
+  setTimeout(() => { if (find === f) sayFindLetter(); }, 350);
+  setTimeout(() => {
+    if (find !== f) return;
+    if (f.round >= FIND_ROUNDS) finishFind();
+    else nextFindRound();
+  }, 2000);
+}
+
+function finishFind() {
+  $('find-play').hidden = true;
+  $('find-done').hidden = false;
+  confetti();
+  play('bravo', 'כל הכבוד');
+}
+
+// ---------- Memory ----------
+
+const MEMORY_COLS = { 6: 3, 8: 4, 12: 4 };   // cards in the game -> cards in a row
+
+let memory = null;
+
+function startMemory(cards) {
+  const pairs = cards / 2;
+  const letters = shuffle(LETTERS.map((_, i) => i)).slice(0, pairs);
+  const deck = shuffle([...letters, ...letters]);
+  memory = { cards, pairs, found: 0, open: [], locked: false };
+
+  $('memory-done').hidden = true;
+  $('memory-play').hidden = false;
+  renderDots('memory-dots', 0, pairs);
+  const grid = $('memory-grid');
+  grid.style.setProperty('--cols', MEMORY_COLS[cards]);
+  grid.style.setProperty('--rows', cards / MEMORY_COLS[cards]);
+  grid.innerHTML = deck.map(i =>
+    `<button class="memcard" type="button" data-letter="${i}" aria-label="קלף"><span class="memcard-inner">` +
+    `<span class="memcard-back" aria-hidden="true">⭐</span><span class="memcard-front">${LETTERS[i].ch}</span></span></button>`).join('');
+
+  letters.forEach(i => preload(letterAudio(i)));
+  preload('bravo');
+}
+
+function flipCard(btn) {
+  const m = memory;
+  if (!m || m.locked || btn.classList.contains('open')) return;
+  const letter = +btn.dataset.letter;
+  btn.classList.add('open');
+  play(letterAudio(letter), LETTERS[letter].name);
+  m.open.push(btn);
+  if (m.open.length < 2) return;
+
+  const [a, b] = m.open;
+  m.open = [];
+  if (a.dataset.letter !== b.dataset.letter) {
+    m.locked = true;          // give the child a moment to look, then turn both back
+    setTimeout(() => {
+      if (memory !== m) return;
+      a.classList.remove('open');
+      b.classList.remove('open');
+      m.locked = false;
+    }, 1200);
+    return;
+  }
+
+  a.classList.add('matched');
+  b.classList.add('matched');
+  m.found++;
+  renderDots('memory-dots', m.found, m.pairs);
+  setTimeout(() => { if (memory === m) ding(); }, 450);
+  if (m.found < m.pairs) return;
+
+  m.locked = true;
+  setTimeout(() => {
+    if (memory !== m) return;
+    $('memory-play').hidden = true;
+    $('memory-done').hidden = false;
+    confetti();
+    play('bravo', 'כל הכבוד');
+  }, 1500);
+}
+
+// ---------- Balloons ----------
+
+const POP_ROUNDS = 5;
+const POP_NEED = 3;        // right balloons to pop in a round
+const POP_LANES = 5;       // columns the balloons rise in
+const POP_SPEEDS = {       // level -> seconds to cross the sky, ms between balloons
+  1: { rise: 11, every: 1400 },
+  2: { rise: 7, every: 900 },
+};
+
+let pop = null;
+
+function startPop(level) {
+  if (pop) clearInterval(pop.timer);
+  const p = pop = { level, round: 0, used: [], letter: -1, got: 0, locked: false, sinceRight: 0, lanes: [], timer: 0 };
+  $('pop-done').hidden = true;
+  $('pop-play').hidden = false;
+  preload('bravo');
+  p.timer = setInterval(() => {
+    if (pop !== p) clearInterval(p.timer);   // the child left the game
+    else spawnBalloon();
+  }, POP_SPEEDS[level].every);
+  nextPopRound();
+}
+
+function nextPopRound() {
+  const p = pop;
+  p.letter = pickOne(LETTERS.map((_, i) => i).filter(i => !p.used.includes(i)));
+  p.used.push(p.letter);
+  p.got = 0;
+  p.sinceRight = 3;          // so the first balloon up is a right one
+  p.locked = false;
+  $('pop-sky').innerHTML = '';
+  renderDots('pop-dots', p.round, POP_ROUNDS);
+  renderDots('pop-marks', 0, POP_NEED);
+  preload(letterAudio(p.letter));
+  spawnBalloon();
+  setTimeout(() => { if (pop === p && !p.locked) sayPopLetter(); }, 400);
+}
+
+function sayPopLetter() {
+  if (pop) play(letterAudio(pop.letter), LETTERS[pop.letter].name);
+}
+
+function spawnBalloon() {
+  const p = pop;
+  if (!p || p.locked || document.hidden) return;
+  const sky = $('pop-sky');
+
+  // A right balloon about one time in three, and never more than three wrong ones in a row.
+  const right = p.sinceRight >= 3 || Math.random() < 0.25;
+  p.sinceRight = right ? 0 : p.sinceRight + 1;
+  const letter = right ? p.letter : pickOne(LETTERS.map((_, i) => i).filter(i => i !== p.letter));
+
+  // Keep clear of the lanes the last two balloons used, so they don't overlap.
+  const lane = pickOne([...Array(POP_LANES).keys()].filter(l => !p.lanes.includes(l)));
+  p.lanes = [lane, ...p.lanes].slice(0, 2);
+
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'balloon';
+  b.dataset.letter = letter;
+  b.style.left = `${(lane + 0.5) * 100 / POP_LANES}%`;
+  b.style.setProperty('--hue', Math.floor(Math.random() * 6));
+  b.style.setProperty('--travel', `${sky.clientHeight}px`);
+  b.style.animationDuration = `${POP_SPEEDS[p.level].rise}s`;
+  b.innerHTML = `<span class="balloon-body">${LETTERS[letter].ch}</span>`;
+  b.addEventListener('animationend', e => { if (e.target === b) b.remove(); });
+  sky.appendChild(b);
+}
+
+function hitBalloon(b) {
+  const p = pop;
+  if (!p || p.locked || b.classList.contains('popped')) return;
+
+  if (+b.dataset.letter !== p.letter) {
+    boop();
+    b.classList.remove('wobble');
+    void b.offsetWidth;
+    b.classList.add('wobble');
+    setTimeout(() => { if (pop === p && !p.locked) sayPopLetter(); }, 700);
+    return;
+  }
+
+  b.classList.add('popped');
+  setTimeout(() => b.remove(), 250);
+  popSound();
+  p.got++;
+  renderDots('pop-marks', p.got, POP_NEED);
+  if (p.got < POP_NEED) return;
+
+  p.locked = true;
+  p.round++;
+  renderDots('pop-dots', p.round, POP_ROUNDS);
+  $('pop-sky').querySelectorAll('.balloon:not(.popped)').forEach(other => other.classList.add('away'));
+  setTimeout(() => { if (pop === p) sayPopLetter(); }, 350);
+  setTimeout(() => {
+    if (pop !== p) return;
+    if (p.round < POP_ROUNDS) { nextPopRound(); return; }
+    clearInterval(p.timer);
+    $('pop-sky').innerHTML = '';
+    $('pop-play').hidden = true;
+    $('pop-done').hidden = false;
+    confetti();
+    play('bravo', 'כל הכבוד');
+  }, 2000);
+}
+
 // ---------- Screens ----------
 
 function renderGrid() {
@@ -632,10 +976,35 @@ function route() {
   const m = hash.match(/^letter-(\d+)$/);
   const level = hash.match(/^order-([12])$/);
   const pictures = hash.match(/^first-([234])$/);
+  const letters = hash.match(/^names-([234])$/);
   trace = null;
   order = null;
   first = null;
-  if (pictures) {
+  names = null;
+  const cards = hash.match(/^memory-(6|8|12)$/);
+  find = null;
+  const speed = hash.match(/^pop-([12])$/);
+  memory = null;
+  pop = null;
+  if (speed) {
+    show('pop-game');
+    startPop(+speed[1]);
+  } else if (hash === 'pop') {
+    show('pop');
+  } else if (cards) {
+    show('memory-game');
+    startMemory(+cards[1]);
+  } else if (hash === 'memory') {
+    show('memory');
+  } else if (hash === 'find') {
+    show('find');
+    startFind();
+  } else if (letters) {
+    show('names-game');
+    startNames(+letters[1]);
+  } else if (hash === 'names') {
+    show('names');
+  } else if (pictures) {
     show('first-game');
     startFirst(+pictures[1]);
   } else if (hash === 'first') {
@@ -651,6 +1020,8 @@ function route() {
   } else if (hash === 'letters') {
     renderGrid();
     show('letters');
+  } else if (hash === 'abc' || hash === 'numbers') {
+    show(hash);
   } else if (hash === 'all') {
     show('all');
     renderAll();
@@ -670,6 +1041,30 @@ $('first-letter').addEventListener('click', sayFirstLetter);
 $('first-choices').addEventListener('click', e => {
   const btn = e.target.closest('.pic');
   if (btn) pickFirst(btn);
+});
+$('names-again').addEventListener('click', () => { if (names) startNames(names.level); });
+$('names-speak').addEventListener('click', sayName);
+$('names-cards').addEventListener('click', e => {
+  const btn = e.target.closest('.namecard');
+  if (btn) pickName(btn);
+});
+$('find-again').addEventListener('click', () => { if (find) startFind(); });
+$('find-speak').addEventListener('click', sayFindLetter);
+$('find-letter').addEventListener('click', sayFindLetter);
+$('find-tiles').addEventListener('click', e => {
+  const btn = e.target.closest('.findtile');
+  if (btn) pickFind(btn);
+});
+$('memory-again').addEventListener('click', () => { if (memory) startMemory(memory.cards); });
+$('memory-grid').addEventListener('click', e => {
+  const btn = e.target.closest('.memcard');
+  if (btn) flipCard(btn);
+});
+$('pop-again').addEventListener('click', () => { if (pop) startPop(pop.level); });
+$('pop-speak').addEventListener('click', sayPopLetter);
+$('pop-sky').addEventListener('pointerdown', e => {
+  const b = e.target.closest('.balloon');
+  if (b) hitBalloon(b);
 });
 $('speak-btn').addEventListener('click', () => {
   if (trace) play(letterAudio(trace.idx), LETTERS[trace.idx].name);
