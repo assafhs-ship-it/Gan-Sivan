@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=0.9">
+  <link rel="stylesheet" href="styles.css?v=1.1">
 </head>
 <body>
 
@@ -91,22 +91,54 @@
         <span class="menu-icon" aria-hidden="true">🎈</span>
         <span class="menu-title">פוצצו את הבלונים</span>
       </a>
+      <a class="menu-card menu-navy" href="#name">
+        <span class="menu-icon" aria-hidden="true">✍️</span>
+        <span class="menu-title">השם שלי</span>
+      </a>
+      <a class="menu-card menu-orange" href="#final">
+        <span class="menu-icon menu-icon-text" aria-hidden="true">ם</span>
+        <span class="menu-title">אות סופית</span>
+      </a>
     </nav>
   </section>
 
-  <!-- Numbers: menu of exercises (none yet) -->
+  <!-- Numbers: menu of exercises -->
   <section id="numbers" class="screen" hidden>
     <div class="topbar">
       <a class="btn btn-round" href="#" aria-label="לדף הבית">🏠</a>
       <h2>מספרים</h2>
       <span class="topbar-spacer"></span>
     </div>
-    <div class="menu">
-      <div class="menu-card soon">
-        <span class="menu-icon" aria-hidden="true">🎁</span>
-        <span class="menu-title">בקרוב...</span>
-      </div>
-    </div>
+    <nav class="menu menu-grid" aria-label="תרגילי מספרים">
+      <a class="menu-card" href="#digits">
+        <span class="menu-icon" aria-hidden="true">✏️</span>
+        <span class="menu-title">כתיבת מספרים</span>
+      </a>
+      <a class="menu-card menu-green" href="#count">
+        <span class="menu-icon" aria-hidden="true">🍓</span>
+        <span class="menu-title">כמה יש?</span>
+      </a>
+      <a class="menu-card menu-purple" href="#numnames">
+        <span class="menu-icon" aria-hidden="true">🔊</span>
+        <span class="menu-title">שמות המספרים</span>
+      </a>
+      <a class="menu-card menu-yellow" href="#numfind">
+        <span class="menu-icon" aria-hidden="true">🔍</span>
+        <span class="menu-title">מצא את המספר</span>
+      </a>
+      <a class="menu-card menu-blue" href="#numorder">
+        <span class="menu-icon" aria-hidden="true">🧩</span>
+        <span class="menu-title">השלמת סדר מספרים</span>
+      </a>
+      <a class="menu-card menu-teal" href="#more">
+        <span class="menu-icon" aria-hidden="true">⚖️</span>
+        <span class="menu-title">מה יותר?</span>
+      </a>
+      <a class="menu-card menu-pink" href="#add">
+        <span class="menu-icon" aria-hidden="true">➕</span>
+        <span class="menu-title">חיבור</span>
+      </a>
+    </nav>
   </section>
 
   <!-- Letter picker -->
@@ -123,7 +155,7 @@
   <!-- Tracing exercise -->
   <section id="trace" class="screen" hidden>
     <div class="topbar">
-      <a class="btn btn-round" href="#letters" aria-label="חזרה לכל האותיות">✖</a>
+      <a class="btn btn-round" id="trace-back" href="#letters" aria-label="חזרה">✖</a>
       <h2 id="trace-title">כתיבת אותיות</h2>
       <button class="btn btn-round" id="speak-btn" type="button" aria-label="השמעת שם האות">🔊</button>
     </div>
@@ -164,8 +196,8 @@
   <!-- Letter order: the game -->
   <section id="order-game" class="screen" hidden>
     <div class="topbar">
-      <a class="btn btn-round" href="#order" aria-label="חזרה">✖</a>
-      <h2>השלמת סדר אותיות</h2>
+      <a class="btn btn-round" id="order-back" href="#order" aria-label="חזרה">✖</a>
+      <h2 id="order-title">השלמת סדר אותיות</h2>
       <span class="topbar-spacer"></span>
     </div>
     <div class="dots" id="order-dots" aria-hidden="true"></div>
@@ -259,8 +291,8 @@
   <!-- Letter names: the game -->
   <section id="names-game" class="screen" hidden>
     <div class="topbar">
-      <a class="btn btn-round" href="#names" aria-label="חזרה">✖</a>
-      <h2>שמות האותיות</h2>
+      <a class="btn btn-round" id="names-back" href="#names" aria-label="חזרה">✖</a>
+      <h2 id="names-title">שמות האותיות</h2>
       <span class="topbar-spacer"></span>
     </div>
     <div class="dots" id="names-dots" aria-hidden="true"></div>
@@ -281,9 +313,9 @@
   <!-- Find the letter -->
   <section id="find" class="screen" hidden>
     <div class="topbar">
-      <a class="btn btn-round" href="#abc" aria-label="חזרה לאותיות">✖</a>
-      <h2>מצא את האות</h2>
-      <button class="btn btn-round" id="find-speak" type="button" aria-label="השמעת שם האות">🔊</button>
+      <a class="btn btn-round" id="find-back" href="#abc" aria-label="חזרה">✖</a>
+      <h2 id="find-title">מצא את האות</h2>
+      <button class="btn btn-round" id="find-speak" type="button" aria-label="השמעת השם">🔊</button>
     </div>
     <div class="dots" id="find-dots" aria-hidden="true"></div>
     <div class="order-play" id="find-play">
@@ -393,16 +425,246 @@
     </div>
   </section>
 
+  <!-- My name: the teacher types a name (or picks a saved one), the child traces it -->
+  <section id="name" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#abc" aria-label="חזרה לאותיות">✖</a>
+      <h2>השם שלי</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <form class="name-form" id="name-form">
+      <input class="name-input" id="name-input" type="text" lang="he" dir="rtl" maxlength="14"
+             autocomplete="off" autocapitalize="off" spellcheck="false"
+             placeholder="כתבו שם בבקשה" aria-label="השם של הילד או הילדה">
+      <button class="btn btn-go" type="submit">✏️ מתחילים</button>
+    </form>
+    <p class="hint" id="name-chips-hint" hidden>או בוחרים שם:</p>
+    <div class="name-chips" id="name-chips"></div>
+  </section>
+
+  <!-- Final letters -->
+  <section id="final" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#abc" aria-label="חזרה לאותיות">✖</a>
+      <h2>אות סופית</h2>
+      <button class="btn btn-round" id="final-speak" type="button" aria-label="השמעת שם האות">🔊</button>
+    </div>
+    <div class="dots" id="final-dots" aria-hidden="true"></div>
+    <div class="order-play" id="final-play">
+      <div class="first-board">
+        <div class="first-letter" id="final-letter"></div>
+        <div class="final-arrow" aria-hidden="true">⬅</div>
+        <div class="first-slot" id="final-slot"></div>
+      </div>
+      <div class="first-choices" id="final-choices"></div>
+    </div>
+    <div class="order-done" id="final-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="final-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Numbers ===== -->
+
+  <!-- Writing numbers: digit picker (tracing itself uses the #trace screen) -->
+  <section id="digits" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#numbers" aria-label="חזרה למספרים">✖</a>
+      <h2>כתיבת מספרים</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <p class="hint">בוחרים מספר</p>
+    <div id="digit-grid" class="letter-grid digit-grid" dir="ltr"></div>
+  </section>
+
+  <!-- How many: level picker and game -->
+  <section id="count" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#numbers" aria-label="חזרה למספרים">✖</a>
+      <h2>כמה יש?</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <p class="hint">עד כמה סופרים?</p>
+    <div class="level-menu">
+      <a class="level-card" href="#count-5" aria-label="עד חמש">
+        <span class="level-num">5</span>
+        <span class="level-demo" aria-hidden="true" dir="ltr"><i>🍎</i><i>🍎</i><i>🍎</i></span>
+      </a>
+      <a class="level-card" href="#count-10" aria-label="עד עשר">
+        <span class="level-num">10</span>
+        <span class="level-demo" aria-hidden="true" dir="ltr"><i>🍎</i><i>🍎</i><i>🍎</i><i>🍎</i><i>🍎</i><i>🍎</i></span>
+      </a>
+    </div>
+  </section>
+
+  <section id="count-game" class="screen num-game" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#count" aria-label="חזרה">✖</a>
+      <h2>כמה יש?</h2>
+      <button class="btn btn-round" id="count-speak" type="button" aria-label="להשמיע שוב את השאלה">🔊</button>
+    </div>
+    <div class="dots" id="count-dots" aria-hidden="true"></div>
+    <div class="order-play" id="count-play">
+      <div class="obj-box" id="count-box" dir="ltr"></div>
+      <div class="name-cards" id="count-cards" dir="ltr"></div>
+    </div>
+    <div class="order-done" id="count-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="count-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Number names and number order: level pickers (the games reuse the letter screens) -->
+  <section id="numnames" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#numbers" aria-label="חזרה למספרים">✖</a>
+      <h2>שמות המספרים</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <p class="hint">כמה מספרים?</p>
+    <div class="level-menu">
+      <a class="level-card" href="#numnames-2" aria-label="שני מספרים">
+        <span class="level-num">2</span>
+        <span class="level-demo" aria-hidden="true" dir="ltr"><i>1</i><i>2</i></span>
+      </a>
+      <a class="level-card" href="#numnames-3" aria-label="שלושה מספרים">
+        <span class="level-num">3</span>
+        <span class="level-demo" aria-hidden="true" dir="ltr"><i>1</i><i>2</i><i>3</i></span>
+      </a>
+      <a class="level-card" href="#numnames-4" aria-label="ארבעה מספרים">
+        <span class="level-num">4</span>
+        <span class="level-demo" aria-hidden="true" dir="ltr"><i>1</i><i>2</i><i>3</i><i>4</i></span>
+      </a>
+    </div>
+  </section>
+
+  <section id="numorder" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#numbers" aria-label="חזרה למספרים">✖</a>
+      <h2>השלמת סדר מספרים</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <p class="hint">עד איזה מספר?</p>
+    <div class="level-menu">
+      <a class="level-card" href="#numorder-10" aria-label="עד עשר, מספר אחד חסר">
+        <span class="level-num">10</span>
+        <span class="level-demo" aria-hidden="true" dir="ltr"><i>1</i><i class="q">?</i><i>3</i><i>4</i></span>
+      </a>
+      <a class="level-card" href="#numorder-20" aria-label="עד עשרים, שני מספרים חסרים">
+        <span class="level-num">20</span>
+        <span class="level-demo" aria-hidden="true" dir="ltr"><i>11</i><i class="q">?</i><i>13</i><i class="q">?</i></span>
+      </a>
+    </div>
+  </section>
+
+  <!-- Which is more: level picker and game -->
+  <section id="more" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#numbers" aria-label="חזרה למספרים">✖</a>
+      <h2>מה יותר?</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <p class="hint">עד כמה?</p>
+    <div class="level-menu">
+      <a class="level-card" href="#more-5" aria-label="עד חמש">
+        <span class="level-num">5</span>
+        <span class="level-demo" aria-hidden="true" dir="ltr"><i>⭐⭐</i><i>⭐</i></span>
+      </a>
+      <a class="level-card" href="#more-10" aria-label="עד עשר">
+        <span class="level-num">10</span>
+        <span class="level-demo" aria-hidden="true" dir="ltr"><i>⭐⭐⭐</i><i>⭐⭐</i></span>
+      </a>
+    </div>
+  </section>
+
+  <section id="more-game" class="screen num-game" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#more" aria-label="חזרה">✖</a>
+      <h2>מה יותר?</h2>
+      <button class="btn btn-round" id="more-speak" type="button" aria-label="להשמיע שוב את השאלה">🔊</button>
+    </div>
+    <div class="dots" id="more-dots" aria-hidden="true"></div>
+    <div class="order-play" id="more-play">
+      <div class="more-row" dir="ltr">
+        <button class="more-panel" id="more-a" type="button"></button>
+        <button class="more-panel" id="more-b" type="button"></button>
+      </div>
+    </div>
+    <div class="order-done" id="more-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="more-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Adding with pictures: level picker and game -->
+  <section id="add" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#numbers" aria-label="חזרה למספרים">✖</a>
+      <h2>חיבור</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <p class="hint">עד כמה?</p>
+    <div class="level-menu">
+      <a class="level-card" href="#add-5" aria-label="עד חמש">
+        <span class="level-num">5</span>
+        <span class="level-demo" aria-hidden="true" dir="ltr"><i>🍎</i><i>+</i><i>🍎</i></span>
+      </a>
+      <a class="level-card" href="#add-10" aria-label="עד עשר">
+        <span class="level-num">10</span>
+        <span class="level-demo" aria-hidden="true" dir="ltr"><i>🍎🍎</i><i>+</i><i>🍎🍎</i></span>
+      </a>
+    </div>
+  </section>
+
+  <section id="add-game" class="screen num-game" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#add" aria-label="חזרה">✖</a>
+      <h2>חיבור</h2>
+      <button class="btn btn-round" id="add-speak" type="button" aria-label="להשמיע שוב את השאלה">🔊</button>
+    </div>
+    <div class="dots" id="add-dots" aria-hidden="true"></div>
+    <div class="order-play" id="add-play">
+      <div class="add-row" dir="ltr">
+        <div class="add-group"><div class="obj-box obj-box-small" id="add-a"></div><div class="add-num" id="add-a-num"></div></div>
+        <div class="add-sign" aria-hidden="true">+</div>
+        <div class="add-group"><div class="obj-box obj-box-small" id="add-b"></div><div class="add-num" id="add-b-num"></div></div>
+        <div class="add-sign" aria-hidden="true">=</div>
+        <div class="add-slot" id="add-slot">?</div>
+      </div>
+      <div class="name-cards" id="add-cards" dir="ltr"></div>
+    </div>
+    <div class="order-done" id="add-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="add-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
   <!-- Review sheet of all letters and their stroke order (open with #all) -->
   <section id="all" class="screen" hidden>
     <div class="topbar">
       <a class="btn btn-round" href="#" aria-label="לדף הבית">🏠</a>
-      <h2>כל האותיות</h2>
+      <h2>כל האותיות והמספרים</h2>
       <span class="topbar-spacer"></span>
     </div>
     <div id="all-grid" class="all-grid"></div>
   </section>
 
-  <script src="script.js?v=0.9"></script>
+  <script src="script.js?v=1.1"></script>
 </body>
 </html>

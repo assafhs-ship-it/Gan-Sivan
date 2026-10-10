@@ -145,19 +145,17 @@ body::before {
 .menu-icon { font-size: 5rem; line-height: 1; }
 .menu-title { font-size: clamp(1.8rem, 5vw, 2.4rem); }
 
-/* A menu of several exercises: two columns, then three, then four as the screen widens */
-.menu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.menu-grid .menu-card { min-height: clamp(130px, 22dvh, 200px); }
+/* A menu of several exercises: rows of two, or three on wider screens.
+   It wraps as a centred flex row, so a short last row sits in the middle. */
+.menu-grid { --cols: 2; --gap: 22px; display: flex; flex-wrap: wrap; justify-content: center; align-content: center; gap: var(--gap); }
+.menu-grid .menu-card { flex: 0 0 calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols)); min-height: clamp(130px, 22dvh, 200px); }
 .menu-grid .menu-icon { font-size: clamp(3rem, 9vw, 4.2rem); }
 .menu-grid .menu-title { font-size: clamp(1.3rem, 3.4vw, 1.9rem); text-align: center; }
-@media (min-width: 600px) { .menu-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (min-width: 900px) { .menu-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 600px) { .menu-grid { --cols: 3; } }
 
 .menu-icon-text { font-size: clamp(3.2rem, 10vw, 4.6rem); letter-spacing: 0.06em; }
 .menu-card.menu-purple { background: var(--purple); box-shadow: 0 8px 0 #7556c9; }
 .menu-card.menu-purple:active { box-shadow: 0 2px 0 #7556c9; }
-.menu-card.soon { background: rgba(255, 255, 255, 0.7); color: #8b8da8; box-shadow: none; border: 4px dashed #c3c6dd; cursor: default; max-width: 420px; width: 100%; justify-self: center; }
-.menu-card.soon:active { transform: none; }
 
 .version { text-align: center; font-size: 1rem; line-height: 1.6; color: #6c6e8c; }
 
@@ -751,6 +749,162 @@ body::before {
 @keyframes rise { to { transform: translateY(calc(-1 * var(--travel) - var(--b) * 1.9)); } }
 @keyframes sway { from { transform: translateX(-7px) rotate(-3deg); } to { transform: translateX(7px) rotate(3deg); } }
 @keyframes burst { to { transform: scale(1.6); opacity: 0; } }
+
+/* ---------- My name ---------- */
+
+.menu-card.menu-navy { background: #4a5bd0; box-shadow: 0 8px 0 #3445b0; }
+.menu-card.menu-navy:active { box-shadow: 0 2px 0 #3445b0; }
+
+.name-form { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; padding: 6vh 0 3vh; }
+.name-input {
+  width: min(100%, 420px);
+  min-height: 72px;
+  padding: 0 22px;
+  border: 5px solid var(--navy);
+  border-radius: 999px;
+  background: var(--white);
+  color: var(--ink);
+  font: inherit;
+  font-size: 2rem;
+  text-align: center;
+  -webkit-user-select: text;
+  user-select: text;
+}
+.name-input:focus { outline: 4px solid var(--yellow); outline-offset: 2px; }
+.name-input.shake { animation: shake 0.4s ease; }
+
+.name-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; padding-bottom: 24px; }
+.name-chip { display: inline-flex; align-items: stretch; border-radius: 999px; background: var(--white); box-shadow: 0 5px 0 rgba(43, 45, 91, 0.2); overflow: hidden; }
+.name-chip button { border: 0; background: none; font: inherit; color: var(--ink); cursor: pointer; touch-action: manipulation; }
+.name-chip-go { min-height: 60px; padding: 0 24px; font-size: 1.7rem; }
+.name-chip-x { padding: 0 16px; font-size: 1.4rem; color: #8b8da8; border-inline-start: 2px solid #e4e6f2; }
+.name-chip button:focus-visible { outline: 4px solid var(--navy); outline-offset: -4px; }
+
+/* the name in the tracing title: written, current, still to come */
+#trace-title span { display: inline-block; padding: 0 0.06em; }
+#trace-title .name-done { color: var(--green-dark); }
+#trace-title .name-now { color: var(--coral); scale: 1.3; }
+#trace-title .name-todo { color: #a9abc4; }
+
+/* ---------- Final letters ---------- */
+
+.menu-card.menu-orange { background: #ff9f43; box-shadow: 0 8px 0 #d97f24; }
+.menu-card.menu-orange:active { box-shadow: 0 2px 0 #d97f24; }
+
+#final { height: 100dvh; min-height: 0; --tile: clamp(54px, 15.5vw, 150px); }
+.final-arrow { font-size: calc(var(--tile) * 0.42); color: #8b8da8; }
+#final .first-slot { color: var(--green-dark); font-size: calc(var(--tile) * 0.72); }
+.final-pic { color: var(--navy); font-size: calc(var(--tile) * 0.62); }
+.pic:nth-child(5) { --frame: var(--green); }
+
+/* ---------- Numbers ---------- */
+
+.digit-grid { max-width: 620px; align-self: center; width: 100%; }
+
+.num-game { height: 100dvh; min-height: 0; --tile: clamp(70px, 20vw, 170px); }
+.num-game .namecard span { display: none; }
+
+/* Pictures to count. As buttons they can be tapped, which numbers them. */
+.obj-box {
+  --obj: clamp(44px, 9.5vw, 88px);
+  align-self: center;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: center;
+  gap: clamp(6px, 1.6vw, 14px);
+  width: min(100%, calc(var(--obj) * 5 + 150px));
+  min-height: calc(var(--obj) * 2 + 70px);
+  padding: 18px;
+  background: var(--white);
+  border: 5px solid var(--navy);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 0 rgba(43, 45, 91, 0.15);
+}
+.obj {
+  position: relative;
+  width: var(--obj);
+  height: var(--obj);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  font: inherit;
+  font-size: calc(var(--obj) * 0.78);
+  line-height: 1;
+}
+button.obj { cursor: pointer; touch-action: manipulation; }
+.obj:focus-visible { outline: 4px solid var(--navy); }
+.obj.counted { background: #e6f8ee; }
+.obj.counted::after {
+  content: attr(data-n);
+  position: absolute;
+  bottom: -8%;
+  right: -8%;
+  min-width: 1.5em;
+  padding: 0.12em 0;
+  border-radius: 999px;
+  background: var(--green);
+  color: var(--white);
+  font-size: calc(var(--obj) * 0.3);
+  text-align: center;
+  animation: pop 0.25s ease;
+}
+
+/* Which is more */
+.more-row { display: flex; align-items: stretch; justify-content: center; gap: clamp(12px, 4vw, 40px); }
+.more-panel {
+  --obj: clamp(34px, 7vw, 70px);
+  flex: 1 1 0;
+  max-width: 400px;
+  min-height: min(52dvh, 380px);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: center;
+  gap: clamp(4px, 1.2vw, 12px);
+  padding: 16px;
+  border: 6px solid var(--blue);
+  border-radius: var(--radius);
+  background: var(--white);
+  font: inherit;
+  box-shadow: 0 8px 0 rgba(43, 45, 91, 0.18);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.more-panel:nth-child(2) { border-color: var(--purple); }
+.more-panel:focus-visible { outline: 4px solid var(--navy); outline-offset: 3px; }
+.more-panel.shake { animation: shake 0.4s ease; }
+.more-panel.right { border-color: var(--green); background: #e6f8ee; }
+
+/* Adding with pictures */
+.add-row { display: flex; align-items: center; justify-content: center; gap: clamp(6px, 2vw, 20px); }
+.add-group { flex: 0 1 auto; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.obj-box-small {
+  --obj: clamp(30px, 6vw, 60px);
+  width: calc(var(--obj) * 3 + 60px);
+  min-height: calc(var(--obj) * 3 + 60px);
+  padding: 12px;
+  gap: clamp(4px, 1vw, 10px);
+}
+.add-num, .add-sign { font-size: clamp(1.8rem, 6vw, 3.4rem); line-height: 1; color: var(--navy); }
+.add-sign { padding-bottom: clamp(1.8rem, 6vw, 3.4rem); }
+.add-slot {
+  width: clamp(60px, 14vw, 120px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  margin-bottom: clamp(1.8rem, 6vw, 3.4rem);
+  border: 4px dashed #c3c6dd;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.75);
+  color: #8b8da8;
+  font-size: clamp(2rem, 8vw, 4.4rem);
+  line-height: 1;
+}
+.add-slot.filled { border-style: solid; border-color: var(--green); background: #e6f8ee; color: var(--green-dark); animation: pop 0.4s ease; }
 
 /* ---------- Confetti ---------- */
 

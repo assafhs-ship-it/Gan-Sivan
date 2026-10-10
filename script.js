@@ -1,4 +1,4 @@
-const APP_VERSION = '0.9';
+const APP_VERSION = '1.1';
 
 // Each letter is drawn on a 200x200 board. `strokes` are SVG paths, in the
 // order the child writes them; each path runs in the writing direction.
@@ -26,6 +26,34 @@ const LETTERS = [
   { ch: 'ש', name: 'שין',  strokes: ['M50,50 L50,125 Q50,155 80,155 L120,155 Q150,155 150,125 L150,50', 'M100,50 L80,150'] },
   { ch: 'ת', name: 'תו',   strokes: ['M50,50 L135,50 Q150,50 150,65 L150,155', 'M80,50 L80,155 L50,155'] },
 ];
+
+// The five final letters, written like LETTERS. `base` is the index in LETTERS of the
+// regular form; `audio` is the file with the spoken name.
+const FINALS = [
+  { ch: 'ך', name: 'כף סופית',  base: 10, audio: 'final-1', strokes: ['M50,50 L130,50 Q150,50 150,70 L150,182'] },
+  { ch: 'ם', name: 'מם סופית',  base: 12, audio: 'final-2', strokes: ['M60,50 L150,50 L150,155 L60,155 L60,50'] },
+  { ch: 'ן', name: 'נון סופית', base: 13, audio: 'final-3', strokes: ['M86,50 L108,50 L108,182'] },
+  { ch: 'ף', name: 'פא סופית',  base: 16, audio: 'final-4', strokes: ['M55,50 L125,50 Q150,50 150,75 L150,182', 'M55,50 L55,100 L100,100'] },
+  { ch: 'ץ', name: 'צדי סופית', base: 17, audio: 'final-5', strokes: ['M62,50 L100,105 L100,182', 'M140,50 L108,100'] },
+];
+
+// Number names 0-20, as spoken when counting; the sound of n is audio/numbers/<nn>.m4a.
+const NUMBERS = ['אפס', 'אחת', 'שתיים', 'שלוש', 'ארבע', 'חמש', 'שש', 'שבע', 'שמונה', 'תשע', 'עשר',
+  'אחת עשרה', 'שתים עשרה', 'שלוש עשרה', 'ארבע עשרה', 'חמש עשרה', 'שש עשרה', 'שבע עשרה', 'שמונה עשרה', 'תשע עשרה', 'עשרים'];
+
+// The digits 0-9 for tracing, written like LETTERS.
+const DIGITS = [
+  { ch: '0', strokes: ['M100,40 C68,40 56,70 56,100 C56,130 68,160 100,160 C132,160 144,130 144,100 C144,70 132,40 100,40'] },
+  { ch: '1', strokes: ['M72,68 L106,40 L106,160'] },
+  { ch: '2', strokes: ['M62,72 C62,30 140,30 138,74 C137,100 92,124 60,160 L146,160'] },
+  { ch: '3', strokes: ['M62,56 C80,32 138,34 136,68 C135,90 116,98 96,98 C120,98 142,108 142,130 C142,166 80,170 58,142'] },
+  { ch: '4', strokes: ['M118,40 L56,124 L150,124', 'M118,40 L118,160'] },
+  { ch: '5', strokes: ['M72,40 L66,92 C86,78 140,80 140,120 C140,166 80,168 58,142', 'M72,40 L138,40'] },
+  { ch: '6', strokes: ['M130,48 C96,34 58,74 58,116 C58,150 80,162 100,162 C124,162 142,146 142,122 C142,98 122,86 100,86 C80,86 62,98 58,118'] },
+  { ch: '7', strokes: ['M58,40 L145,40 L92,160'] },
+  { ch: '8', strokes: ['M132,58 C125,34 70,34 66,62 C64,84 136,112 138,138 C138,168 62,168 62,138 C62,112 136,84 132,58'] },
+  { ch: '9', strokes: ['M138,75 C138,50 122,38 100,38 C78,38 62,54 62,76 C62,98 78,112 100,112 C122,112 138,98 138,75 L134,160'] },
+].map((d, n) => ({ ...d, name: NUMBERS[n] }));
 
 // Picture words for "מה מתחיל ב", one row per letter in LETTERS order. Each is
 // [word, picture, vocalized word]; its sound is audio/words/<letter>-<n>.m4a.
@@ -67,15 +95,15 @@ const $ = id => document.getElementById(id);
 
 // ---------- Progress ----------
 
-function loadDone() {
-  try { return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY)) || []); }
+function loadDone(key = STORAGE_KEY) {
+  try { return new Set(JSON.parse(localStorage.getItem(key)) || []); }
   catch { return new Set(); }
 }
 
-function markDone(idx) {
-  const done = loadDone();
+function markDone(idx, key = STORAGE_KEY) {
+  const done = loadDone(key);
   done.add(idx);
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify([...done])); } catch {}
+  try { localStorage.setItem(key, JSON.stringify([...done])); } catch {}
 }
 
 // ---------- Sound ----------
@@ -298,6 +326,16 @@ let trace = null;
 
 function openLetter(idx) {
   const letter = LETTERS[idx];
+  $('trace-title').textContent = `האות ${letter.ch}`;
+  $('trace-back').href = '#letters';
+  $('prev-btn').href = idx > 0 ? `#letter-${idx}` : '#letters';
+  $('next-btn').href = idx < LETTERS.length - 1 ? `#letter-${idx + 2}` : '#letters';
+  startTrace(letter, letterAudio(idx), { reopen: () => openLetter(idx), mark: () => markDone(idx) });
+}
+
+// Puts `letter` (from LETTERS or FINALS) on the board. `extra` joins the trace state:
+// `reopen` starts the same letter again, `mark` records it as done, `onDone` replaces the usual ending.
+function startTrace(letter, audio, extra) {
   const board = $('board');
   const banner = $('name-banner');
 
@@ -305,13 +343,10 @@ function openLetter(idx) {
   board.classList.remove('done');
   banner.hidden = true;
   banner.textContent = letter.name;
-  $('trace-title').textContent = `האות ${letter.ch}`;
-  $('prev-btn').href = idx > 0 ? `#letter-${idx}` : '#letters';
-  $('next-btn').href = idx < LETTERS.length - 1 ? `#letter-${idx + 2}` : '#letters';
   $('next-btn').classList.remove('pulse');
 
-  trace = { idx, current: 0, drawing: false, finished: false, ...buildLetter(board, letter) };
-  preload(letterAudio(idx));
+  trace = { letter, audio, current: 0, drawing: false, finished: false, ...extra, ...buildLetter(board, letter) };
+  preload(audio);
   preload('bravo');
 
   const mine = trace;
@@ -383,24 +418,32 @@ function finishStroke() {
 
 function finishLetter() {
   const mine = trace;
-  const letter = LETTERS[mine.idx];
   mine.finished = true;
   mine.head.setAttribute('visibility', 'hidden');
-  markDone(mine.idx);
+  mine.mark?.();
 
   $('board').classList.add('done');
   $('name-banner').hidden = false;
   $('next-btn').classList.add('pulse');
-  play(letterAudio(mine.idx), letter.name);
+  play(mine.audio, mine.letter.name);
+  if (mine.onDone) { mine.onDone(); return; }
   confetti();
   setTimeout(() => { if (trace === mine) play('bravo', 'כל הכבוד'); }, 1200);
 }
 
-// ---------- Letter order ----------
+// ---------- Symbol sets ----------
+
+// Several letter games also run with numbers. They are given `items`, each
+// { ch, name, audio, hint? }, instead of reaching for LETTERS themselves.
+const numAudio = n => `numbers/${String(n).padStart(2, '0')}`;
+const LETTER_ITEMS = LETTERS.map((l, i) => ({ ch: l.ch, name: l.name, audio: letterAudio(i), hint: WORDS[i][0][1] }));
+const NUMBER_ITEMS = NUMBERS.map((name, n) => ({ ch: String(n), name, audio: numAudio(n) }));
+
+// ---------- Completing the order ----------
 
 const ORDER_ROUNDS = 5;   // rounds in one game
-const ORDER_RUN = 4;      // consecutive letters shown in a round
-const ORDER_CHOICES = 4;  // letters offered in the clouds
+const ORDER_RUN = 4;      // consecutive symbols shown in a round
+const ORDER_CHOICES = 4;  // symbols offered in the clouds
 
 let order = null;
 
@@ -412,9 +455,13 @@ function shuffle(list) {
   return list;
 }
 
-// `level` is how many letters of the run are missing.
-function startOrder(level) {
-  order = { level, round: 0, lastStart: -1, left: 0, locked: false };
+// cfg: { items, missing, title, back, ltr }. `missing` is how many of the run are hidden;
+// `ltr` lays the run out left to right, as numbers are read.
+function startOrder(cfg) {
+  order = { cfg, round: 0, lastStart: -1, left: 0, locked: false };
+  $('order-title').textContent = cfg.title;
+  $('order-back').href = cfg.back;
+  $('order-seq').dir = cfg.ltr ? 'ltr' : 'rtl';
   $('order-done').hidden = true;
   $('order-play').hidden = false;
   preload('bravo');
@@ -428,25 +475,26 @@ function renderDots(id, done, total) {
 
 function nextOrderRound() {
   const o = order;
+  const items = o.cfg.items;
   let start;
-  do { start = Math.floor(Math.random() * (LETTERS.length - ORDER_RUN + 1)); } while (start === o.lastStart);
+  do { start = Math.floor(Math.random() * (items.length - ORDER_RUN + 1)); } while (start === o.lastStart);
   o.lastStart = start;
 
   const run = Array.from({ length: ORDER_RUN }, (_, i) => start + i);
-  const missing = shuffle([...run]).slice(0, o.level);
-  const others = shuffle(LETTERS.map((_, i) => i).filter(i => !run.includes(i)));
-  const choices = shuffle([...missing, ...others.slice(0, ORDER_CHOICES - o.level)]);
+  const missing = shuffle([...run]).slice(0, o.cfg.missing);
+  const others = shuffle(items.map((_, i) => i).filter(i => !run.includes(i)));
+  const choices = shuffle([...missing, ...others.slice(0, ORDER_CHOICES - o.cfg.missing)]);
   o.left = missing.length;
   o.locked = false;
   renderDots('order-dots', o.round, ORDER_ROUNDS);
 
   $('order-seq').innerHTML = run.map(idx => missing.includes(idx)
     ? `<div class="ring slot" data-idx="${idx}">?</div>`
-    : `<div class="ring">${LETTERS[idx].ch}</div>`).join('');
+    : `<div class="ring">${items[idx].ch}</div>`).join('');
   $('order-options').innerHTML = choices.map(idx =>
-    `<button class="cloud" type="button" data-idx="${idx}" aria-label="${LETTERS[idx].name}"><span>${LETTERS[idx].ch}</span></button>`).join('');
+    `<button class="cloud" type="button" data-idx="${idx}" aria-label="${items[idx].name}"><span>${items[idx].ch}</span></button>`).join('');
 
-  choices.forEach(idx => preload(letterAudio(idx)));
+  choices.forEach(idx => preload(items[idx].audio));
   $('order-options').querySelectorAll('.cloud').forEach(makeDraggable);
 }
 
@@ -495,6 +543,7 @@ function dropChoice(el, dragged, slot) {
   if (!order || order.locked) return;
   if (dragged && !slot) return;   // let go away from any "?": the cloud just floats back
   const idx = +el.dataset.idx;
+  const item = order.cfg.items[idx];
   const home = document.querySelector(`#order-seq .slot[data-idx="${idx}"]`);
 
   if (!home || (dragged && slot !== home)) {
@@ -504,10 +553,10 @@ function dropChoice(el, dragged, slot) {
     return;
   }
 
-  home.textContent = LETTERS[idx].ch;
+  home.textContent = item.ch;
   home.classList.replace('slot', 'filled');
   el.classList.add('used');
-  play(letterAudio(idx), LETTERS[idx].name);
+  play(item.audio, item.name);
   if (--order.left === 0) finishOrderRound();
 }
 
@@ -619,15 +668,17 @@ function finishFirst() {
   play('bravo', 'כל הכבוד');
 }
 
-// ---------- Letter names ----------
+// ---------- Names ----------
 
 const NAMES_ROUNDS = 5;
 
 let names = null;
 
-// `level` is how many letters there are to choose from.
-function startNames(level) {
-  names = { level, round: 0, used: [], letter: -1, locked: false };
+// cfg: { items, level, title, back }. `level` is how many cards there are to choose from.
+function startNames(cfg) {
+  names = { cfg, round: 0, used: [], target: -1, locked: false };
+  $('names-title').textContent = cfg.title;
+  $('names-back').href = cfg.back;
   $('names-done').hidden = true;
   $('names-play').hidden = false;
   preload('bravo');
@@ -636,33 +687,37 @@ function startNames(level) {
 
 function nextNamesRound() {
   const n = names;
-  const all = LETTERS.map((_, i) => i);
-  n.letter = pickOne(all.filter(i => !n.used.includes(i)));
-  n.used.push(n.letter);
+  const items = n.cfg.items;
+  const all = items.map((_, i) => i);
+  n.target = pickOne(all.filter(i => !n.used.includes(i)));
+  n.used.push(n.target);
   n.locked = false;
 
-  const others = shuffle(all.filter(i => i !== n.letter)).slice(0, n.level - 1);
-  const choices = shuffle([n.letter, ...others]);
+  const others = shuffle(all.filter(i => i !== n.target)).slice(0, n.cfg.level - 1);
+  const choices = shuffle([n.target, ...others]);
 
   renderDots('names-dots', n.round, NAMES_ROUNDS);
   $('names-cards').innerHTML = choices.map(i =>
-    `<button class="namecard" type="button" data-letter="${i}">${LETTERS[i].ch}<span aria-hidden="true">${WORDS[i][0][1]}</span></button>`).join('');
+    `<button class="namecard" type="button" data-item="${i}">${items[i].ch}` +
+    `${items[i].hint ? `<span aria-hidden="true">${items[i].hint}</span>` : ''}</button>`).join('');
 
-  choices.forEach(i => preload(letterAudio(i)));
+  choices.forEach(i => preload(items[i].audio));
   setTimeout(() => { if (names === n && !n.locked) sayName(); }, 400);
 }
 
 function sayName() {
-  if (names) play(letterAudio(names.letter), LETTERS[names.letter].name);
+  if (!names) return;
+  const item = names.cfg.items[names.target];
+  play(item.audio, item.name);
 }
 
 function pickName(btn) {
   const n = names;
   if (!n || n.locked || btn.classList.contains('off')) return;
 
-  if (+btn.dataset.letter !== n.letter) {
+  if (+btn.dataset.item !== n.target) {
     boop();
-    btn.classList.add('shake', 'off');   // a wrong letter is taken out of the round
+    btn.classList.add('shake', 'off');   // a wrong card is taken out of the round
     setTimeout(() => { if (names === n && !n.locked) sayName(); }, 700);
     return;
   }
@@ -688,20 +743,25 @@ function finishNames() {
   play('bravo', 'כל הכבוד');
 }
 
-// ---------- Find the letter ----------
+// ---------- Find it ----------
 
 const FIND_ROUNDS = 5;
 const FIND_TILES = 8;
-const FINAL_LETTERS = ['ך', 'ם', 'ן', 'ף', 'ץ'];   // only ever shown as wrong tiles
 // Letters that look alike; a couple of them are mixed in among the wrong tiles.
 const LOOK_ALIKE = ['בכפ', 'דרך', 'החת', 'וז', 'גנ', 'סם', 'עצץ', 'טמ', 'יו', 'פף', 'כך', 'נן', 'מם'];
 // Pairs too close to tell apart in the site's rounded font; never shown together.
 const TOO_ALIKE = ['ון'];
+const DIGITS_ALIKE = ['69', '17', '38', '25', '06'];
 
 let find = null;
 
-function startFind() {
-  find = { round: 0, used: [], letter: -1, left: 0, total: 0, locked: false };
+// cfg: { items, pool, alike, tooAlike, title, back }. `items` can be the one to find;
+// `pool` is every symbol that may appear as a wrong tile.
+function startFind(cfg) {
+  find = { cfg, round: 0, used: [], target: -1, left: 0, total: 0, locked: false };
+  $('find-title').textContent = cfg.title;
+  $('find-back').href = cfg.back;
+  $('find-tiles').dir = cfg.ltr ? 'ltr' : 'rtl';
   $('find-done').hidden = true;
   $('find-play').hidden = false;
   preload('bravo');
@@ -710,16 +770,16 @@ function startFind() {
 
 function nextFindRound() {
   const f = find;
-  f.letter = pickOne(LETTERS.map((_, i) => i).filter(i => !f.used.includes(i)));
-  f.used.push(f.letter);
+  const { items, pool, alike: groups, tooAlike } = f.cfg;
+  f.target = pickOne(items.map((_, i) => i).filter(i => !f.used.includes(i)));
+  f.used.push(f.target);
   f.total = f.left = pickOne([3, 4]);
   f.locked = false;
 
-  const ch = LETTERS[f.letter].ch;
-  const alike = [...new Set(LOOK_ALIKE.filter(g => g.includes(ch)).join(''))].filter(c => c !== ch);
-  const banned = TOO_ALIKE.filter(pair => pair.includes(ch)).join('');
-  const rest = [...LETTERS.map(l => l.ch), ...FINAL_LETTERS]
-    .filter(c => c !== ch && !alike.includes(c) && !banned.includes(c));
+  const ch = items[f.target].ch;
+  const alike = [...new Set(groups.filter(g => g.includes(ch)).join(''))].filter(c => c !== ch);
+  const banned = tooAlike.filter(pair => pair.includes(ch)).join('');
+  const rest = pool.filter(c => c !== ch && !alike.includes(c) && !banned.includes(c));
   const wrong = [...shuffle(alike).slice(0, 2), ...shuffle(rest)].slice(0, FIND_TILES - f.total);
   const tiles = shuffle([...Array(f.total).fill(ch), ...wrong]);
 
@@ -729,19 +789,21 @@ function nextFindRound() {
   $('find-tiles').classList.remove('cheer');
   $('find-tiles').innerHTML = tiles.map(c => `<button class="findtile" type="button">${c}</button>`).join('');
 
-  preload(letterAudio(f.letter));
+  preload(items[f.target].audio);
   setTimeout(() => { if (find === f && !f.locked) sayFindLetter(); }, 400);
 }
 
 function sayFindLetter() {
-  if (find) play(letterAudio(find.letter), LETTERS[find.letter].name);
+  if (!find) return;
+  const item = find.cfg.items[find.target];
+  play(item.audio, item.name);
 }
 
 function pickFind(btn) {
   const f = find;
   if (!f || f.locked || btn.classList.contains('found')) return;
 
-  if (btn.textContent !== LETTERS[f.letter].ch) {
+  if (btn.textContent !== f.cfg.items[f.target].ch) {
     boop();
     btn.classList.remove('shake');
     void btn.offsetWidth;
@@ -947,6 +1009,383 @@ function hitBalloon(b) {
   }, 2000);
 }
 
+// ---------- My name ----------
+
+const NAMES_KEY = 'gan-names-v1';
+const NAME_MAX = 12;
+
+let myName = null;   // { text, pos } while a name is being traced
+
+// What to trace for a character, or null if it is not a Hebrew letter.
+function glyphFor(ch) {
+  const i = LETTERS.findIndex(l => l.ch === ch);
+  if (i >= 0) return { letter: LETTERS[i], audio: letterAudio(i) };
+  const final = FINALS.find(f => f.ch === ch);
+  return final ? { letter: final, audio: final.audio } : null;
+}
+
+const cleanName = text => [...text].filter(glyphFor).slice(0, NAME_MAX).join('');
+
+function loadNames() {
+  try { return (JSON.parse(localStorage.getItem(NAMES_KEY)) || []).map(cleanName).filter(Boolean); }
+  catch { return []; }
+}
+
+function saveNames(names) {
+  try { localStorage.setItem(NAMES_KEY, JSON.stringify(names)); } catch {}
+}
+
+function renderNames() {
+  const names = loadNames();
+  $('name-chips-hint').hidden = names.length === 0;
+  $('name-chips').innerHTML = names.map(n =>
+    `<span class="name-chip"><button class="name-chip-go" type="button" data-name="${n}">${n}</button>` +
+    `<button class="name-chip-x" type="button" data-remove="${n}" aria-label="מחיקת השם ${n}">×</button></span>`).join('');
+}
+
+function startName(text) {
+  const name = cleanName(text);
+  if (!name) return false;
+  saveNames([name, ...loadNames().filter(n => n !== name)].slice(0, 40));
+  myName = { text: name, pos: 0 };
+  location.hash = 'name-trace';
+  return true;
+}
+
+function openNameLetter(pos) {
+  const chars = [...myName.text];
+  const glyph = glyphFor(chars[pos]);
+  myName.pos = pos;
+  renderNameTitle(pos);
+  $('trace-back').href = '#name';
+  $('prev-btn').href = $('next-btn').href = '#name-trace';   // stepping is handled by stepName()
+  startTrace(glyph.letter, glyph.audio, {
+    inName: true,
+    reopen: () => openNameLetter(pos),
+    onDone: () => nameLetterDone(pos),
+  });
+}
+
+// The whole name in the title: letters already written, the current one, the rest.
+function renderNameTitle(pos) {
+  $('trace-title').innerHTML = [...myName.text].map((c, i) =>
+    `<span class="${i < pos ? 'name-done' : i === pos ? 'name-now' : 'name-todo'}">${c}</span>`).join('');
+}
+
+function nameLetterDone(pos) {
+  const mine = trace;
+  const last = pos === [...myName.text].length - 1;
+  if (!last) {
+    setTimeout(() => { if (trace === mine) openNameLetter(pos + 1); }, 1800);
+    return;
+  }
+  renderNameTitle(pos + 1);
+  $('name-banner').textContent = myName.text;
+  confetti();
+  setTimeout(() => { if (trace === mine) play('bravo', 'כל הכבוד'); }, 1200);
+}
+
+function stepName(by) {
+  const pos = myName.pos + by;
+  if (pos < 0 || pos >= [...myName.text].length) location.hash = 'name';
+  else openNameLetter(pos);
+}
+
+// ---------- Final letters ----------
+
+let finals = null;
+
+function startFinals() {
+  finals = { queue: shuffle(FINALS.map((_, i) => i)), round: 0, target: -1, locked: false };
+  $('final-done').hidden = true;
+  $('final-play').hidden = false;
+  preload('bravo');
+  nextFinalsRound();
+}
+
+function nextFinalsRound() {
+  const f = finals;
+  f.target = f.queue[f.round];
+  f.locked = false;
+  const final = FINALS[f.target];
+
+  renderDots('final-dots', f.round, FINALS.length);
+  $('final-letter').textContent = LETTERS[final.base].ch;
+  $('final-slot').textContent = '';
+  $('final-slot').classList.remove('filled');
+  $('final-choices').innerHTML = shuffle(FINALS.map((_, i) => i)).map(i =>
+    `<button class="pic final-pic" type="button" data-final="${i}" aria-label="${FINALS[i].name}">${FINALS[i].ch}</button>`).join('');
+
+  preload(letterAudio(final.base));
+  preload(final.audio);
+  setTimeout(() => { if (finals === f && !f.locked) sayFinalBase(); }, 400);
+}
+
+function sayFinalBase() {
+  if (!finals) return;
+  const base = FINALS[finals.target].base;
+  play(letterAudio(base), LETTERS[base].name);
+}
+
+function pickFinal(btn) {
+  const f = finals;
+  if (!f || f.locked) return;
+
+  if (+btn.dataset.final !== f.target) {
+    boop();
+    btn.classList.remove('shake');
+    void btn.offsetWidth;
+    btn.classList.add('shake');
+    return;
+  }
+
+  const final = FINALS[f.target];
+  f.locked = true;
+  f.round++;
+  btn.classList.add('used');
+  $('final-slot').textContent = final.ch;
+  $('final-slot').classList.add('filled');
+  ding();
+  setTimeout(() => { if (finals === f) play(final.audio, final.name); }, 350);
+  renderDots('final-dots', f.round, FINALS.length);
+  setTimeout(() => {
+    if (finals !== f) return;
+    if (f.round < FINALS.length) { nextFinalsRound(); return; }
+    $('final-play').hidden = true;
+    $('final-done').hidden = false;
+    confetti();
+    play('bravo', 'כל הכבוד');
+  }, 2200);
+}
+
+// ---------- Writing numbers ----------
+
+const DIGITS_KEY = 'gan-digits-v1';
+
+function renderDigitGrid() {
+  const done = loadDone(DIGITS_KEY);
+  $('digit-grid').innerHTML = DIGITS.map((d, n) =>
+    `<a class="tile${done.has(n) ? ' done' : ''}" href="#digit-${n}" aria-label="${d.name}">${d.ch}</a>`).join('');
+}
+
+function openDigit(n) {
+  $('trace-title').textContent = `המספר ${n}`;
+  $('trace-back').href = '#digits';
+  $('prev-btn').href = n > 0 ? `#digit-${n - 1}` : '#digits';
+  $('next-btn').href = n < DIGITS.length - 1 ? `#digit-${n + 1}` : '#digits';
+  startTrace(DIGITS[n], numAudio(n), { reopen: () => openDigit(n), mark: () => markDone(n, DIGITS_KEY) });
+}
+
+// ---------- Number games: shared pieces ----------
+
+const NUM_ROUNDS = 5;
+const OBJECTS = ['🍎', '🎈', '⭐', '🐟', '🌸', '🚗', '🐶', '⚽', '🍓', '🦋'];
+
+const range = (from, to) => Array.from({ length: to - from + 1 }, (_, i) => from + i);
+
+// Fills `box` with n pictures. As buttons they can be tapped to count them aloud.
+function fillObjects(box, n, picture, tappable) {
+  const tag = tappable ? 'button type="button"' : 'span';
+  box.innerHTML = Array(n).fill(`<${tag} class="obj">${picture}</${tag.split(' ')[0]}>`).join('');
+}
+
+// Counts a tapped picture: it gets the next number, which is also spoken.
+// `tally` is shared by every box of a round, so counting carries on from one box to the next.
+function countObject(btn, tally) {
+  if (!btn || btn.classList.contains('counted')) return;
+  tally.n++;
+  btn.classList.add('counted');
+  btn.dataset.n = tally.n;
+  play(numAudio(tally.n), NUMBERS[tally.n]);
+}
+
+// Three answers in rising order: the right one and two of its neighbours.
+function nearChoices(n, min, max) {
+  const near = shuffle([n - 2, n - 1, n + 1, n + 2].filter(v => v >= min && v <= max));
+  return [n, ...near.slice(0, 2)].sort((a, b) => a - b);
+}
+
+function numberCards(id, values) {
+  $(id).innerHTML = values.map(v => `<button class="namecard" type="button" data-value="${v}">${v}</button>`).join('');
+}
+
+// Marks the tapped answer card. Returns true when it was the right one.
+function answerCard(btn, right, boxId) {
+  if (+btn.dataset.value !== right) {
+    boop();
+    btn.classList.add('shake', 'off');
+    return false;
+  }
+  btn.classList.add('right');
+  $(boxId).querySelectorAll('.namecard:not(.right)').forEach(card => card.classList.add('off'));
+  ding();
+  return true;
+}
+
+function finishGame(prefix) {
+  $(`${prefix}-play`).hidden = true;
+  $(`${prefix}-done`).hidden = false;
+  confetti();
+  play('bravo', 'כל הכבוד');
+}
+
+// ---------- How many ----------
+
+let count = null;
+
+// `max` is the largest group, 5 or 10.
+function startCount(max) {
+  count = { max, round: 0, used: [], n: 0, tally: null, locked: false };
+  $('count-done').hidden = true;
+  $('count-play').hidden = false;
+  preload('bravo');
+  preload('q-count');
+  nextCountRound();
+}
+
+function nextCountRound() {
+  const c = count;
+  if (c.used.length >= c.max) c.used = [];
+  c.n = pickOne(range(1, c.max).filter(v => !c.used.includes(v)));
+  c.used.push(c.n);
+  c.tally = { n: 0 };
+  c.locked = false;
+
+  renderDots('count-dots', c.round, NUM_ROUNDS);
+  fillObjects($('count-box'), c.n, pickOne(OBJECTS), true);
+  numberCards('count-cards', nearChoices(c.n, 1, c.max));
+  range(1, c.n).forEach(v => preload(numAudio(v)));
+  setTimeout(() => { if (count === c && !c.locked) play('q-count', 'כמה יש?'); }, 400);
+}
+
+function pickCount(btn) {
+  const c = count;
+  if (!c || c.locked || btn.classList.contains('off')) return;
+  if (!answerCard(btn, c.n, 'count-cards')) return;
+
+  c.locked = true;
+  c.round++;
+  renderDots('count-dots', c.round, NUM_ROUNDS);
+  setTimeout(() => { if (count === c) play(numAudio(c.n), NUMBERS[c.n]); }, 350);
+  setTimeout(() => {
+    if (count !== c) return;
+    if (c.round >= NUM_ROUNDS) finishGame('count');
+    else nextCountRound();
+  }, 2000);
+}
+
+// ---------- Which is more ----------
+
+let more = null;
+
+function startMore(max) {
+  more = { max, round: 0, locked: false };
+  $('more-done').hidden = true;
+  $('more-play').hidden = false;
+  preload('bravo');
+  preload('q-more');
+  nextMoreRound();
+}
+
+function nextMoreRound() {
+  const m = more;
+  const a = pickOne(range(1, m.max));
+  const b = pickOne(range(1, m.max).filter(v => v !== a));
+  const picture = pickOne(OBJECTS);
+  m.locked = false;
+
+  renderDots('more-dots', m.round, NUM_ROUNDS);
+  [['more-a', a], ['more-b', b]].forEach(([id, n]) => {
+    const panel = $(id);
+    panel.className = 'more-panel';
+    panel.dataset.n = n;
+    panel.setAttribute('aria-label', NUMBERS[n]);
+    fillObjects(panel, n, picture, false);
+  });
+  preload(numAudio(Math.max(a, b)));
+  setTimeout(() => { if (more === m && !m.locked) play('q-more', 'איפה יש יותר?'); }, 400);
+}
+
+function pickMore(panel) {
+  const m = more;
+  if (!m || m.locked) return;
+  const n = +panel.dataset.n;
+  const other = +$(panel.id === 'more-a' ? 'more-b' : 'more-a').dataset.n;
+
+  if (n < other) {
+    boop();
+    panel.classList.remove('shake');
+    void panel.offsetWidth;
+    panel.classList.add('shake');
+    return;
+  }
+
+  m.locked = true;
+  m.round++;
+  panel.classList.add('right');
+  ding();
+  renderDots('more-dots', m.round, NUM_ROUNDS);
+  setTimeout(() => { if (more === m) play(numAudio(n), NUMBERS[n]); }, 350);
+  setTimeout(() => {
+    if (more !== m) return;
+    if (m.round >= NUM_ROUNDS) finishGame('more');
+    else nextMoreRound();
+  }, 2000);
+}
+
+// ---------- Adding with pictures ----------
+
+let add = null;
+
+// `max` is the largest sum, 5 or 10.
+function startAdd(max) {
+  add = { max, round: 0, sum: 0, tally: null, locked: false };
+  $('add-done').hidden = true;
+  $('add-play').hidden = false;
+  preload('bravo');
+  preload('q-add');
+  nextAddRound();
+}
+
+function nextAddRound() {
+  const a = add;
+  a.sum = pickOne(range(2, a.max).filter(v => v !== a.sum));
+  const left = pickOne(range(1, a.sum - 1));
+  const right = a.sum - left;
+  const picture = pickOne(OBJECTS);
+  a.tally = { n: 0 };
+  a.locked = false;
+
+  renderDots('add-dots', a.round, NUM_ROUNDS);
+  fillObjects($('add-a'), left, picture, true);
+  fillObjects($('add-b'), right, picture, true);
+  $('add-a-num').textContent = left;
+  $('add-b-num').textContent = right;
+  $('add-slot').textContent = '?';
+  $('add-slot').classList.remove('filled');
+  numberCards('add-cards', nearChoices(a.sum, 1, a.max));
+  range(1, a.sum).forEach(v => preload(numAudio(v)));
+  setTimeout(() => { if (add === a && !a.locked) play('q-add', 'כמה יש ביחד?'); }, 400);
+}
+
+function pickAdd(btn) {
+  const a = add;
+  if (!a || a.locked || btn.classList.contains('off')) return;
+  if (!answerCard(btn, a.sum, 'add-cards')) return;
+
+  a.locked = true;
+  a.round++;
+  $('add-slot').textContent = a.sum;
+  $('add-slot').classList.add('filled');
+  renderDots('add-dots', a.round, NUM_ROUNDS);
+  setTimeout(() => { if (add === a) play(numAudio(a.sum), NUMBERS[a.sum]); }, 350);
+  setTimeout(() => {
+    if (add !== a) return;
+    if (a.round >= NUM_ROUNDS) finishGame('add');
+    else nextAddRound();
+  }, 2000);
+}
+
 // ---------- Screens ----------
 
 function renderGrid() {
@@ -964,6 +1403,7 @@ function renderAll() {
     grid.appendChild(cell);
     buildLetter(cell, letter);
   });
+  [...FINALS, ...DIGITS].forEach(glyph => buildLetter(grid.appendChild(document.createElement('a')), glyph));
 }
 
 function show(id) {
@@ -986,7 +1426,59 @@ function route() {
   const speed = hash.match(/^pop-([12])$/);
   memory = null;
   pop = null;
-  if (speed) {
+  finals = null;
+  count = null;
+  more = null;
+  add = null;
+  const digit = hash.match(/^digit-(\d)$/);
+  const countTo = hash.match(/^count-(5|10)$/);
+  const moreTo = hash.match(/^more-(5|10)$/);
+  const addTo = hash.match(/^add-(5|10)$/);
+  const numNames = hash.match(/^numnames-([234])$/);
+  const numOrder = hash.match(/^numorder-(10|20)$/);
+  if (digit) {
+    show('trace');
+    openDigit(+digit[1]);
+  } else if (hash === 'digits') {
+    renderDigitGrid();
+    show('digits');
+  } else if (countTo) {
+    show('count-game');
+    startCount(+countTo[1]);
+  } else if (moreTo) {
+    show('more-game');
+    startMore(+moreTo[1]);
+  } else if (addTo) {
+    show('add-game');
+    startAdd(+addTo[1]);
+  } else if (numNames) {
+    show('names-game');
+    startNames({ items: NUMBER_ITEMS.slice(0, 11), level: +numNames[1], title: 'שמות המספרים', back: '#numnames' });
+  } else if (numOrder) {
+    show('order-game');
+    startOrder({
+      items: NUMBER_ITEMS.slice(1, +numOrder[1] + 1), missing: numOrder[1] === '10' ? 1 : 2,
+      title: 'השלמת סדר מספרים', back: '#numorder', ltr: true,
+    });
+  } else if (hash === 'numfind') {
+    show('find');
+    startFind({
+      items: NUMBER_ITEMS.slice(0, 10), pool: range(0, 9).map(String), alike: DIGITS_ALIKE, tooAlike: [],
+      title: 'מצא את המספר', back: '#numbers', ltr: true,
+    });
+  } else if (['count', 'more', 'add', 'numnames', 'numorder'].includes(hash)) {
+    show(hash);
+  } else if (hash === 'name-trace' && myName) {
+    show('trace');
+    openNameLetter(0);
+  } else if (hash === 'name' || hash === 'name-trace') {
+    myName = null;
+    renderNames();
+    show('name');
+  } else if (hash === 'final') {
+    show('final');
+    startFinals();
+  } else if (speed) {
     show('pop-game');
     startPop(+speed[1]);
   } else if (hash === 'pop') {
@@ -998,10 +1490,13 @@ function route() {
     show('memory');
   } else if (hash === 'find') {
     show('find');
-    startFind();
+    startFind({
+      items: LETTER_ITEMS, pool: [...LETTERS, ...FINALS].map(l => l.ch),   // final letters only ever appear as wrong tiles
+      alike: LOOK_ALIKE, tooAlike: TOO_ALIKE, title: 'מצא את האות', back: '#abc',
+    });
   } else if (letters) {
     show('names-game');
-    startNames(+letters[1]);
+    startNames({ items: LETTER_ITEMS, level: +letters[1], title: 'שמות האותיות', back: '#names' });
   } else if (hash === 'names') {
     show('names');
   } else if (pictures) {
@@ -1011,7 +1506,7 @@ function route() {
     show('first');
   } else if (level) {
     show('order-game');
-    startOrder(+level[1]);
+    startOrder({ items: LETTER_ITEMS, missing: +level[1], title: 'השלמת סדר אותיות', back: '#order' });
   } else if (hash === 'order') {
     show('order');
   } else if (m && LETTERS[m[1] - 1]) {
@@ -1033,8 +1528,30 @@ function route() {
 // ---------- Init ----------
 
 $('version').textContent = APP_VERSION;
-$('erase-btn').addEventListener('click', () => { if (trace) openLetter(trace.idx); });
-$('order-again').addEventListener('click', () => { if (order) startOrder(order.level); });
+$('erase-btn').addEventListener('click', () => { if (trace) trace.reopen(); });
+$('prev-btn').addEventListener('click', e => { if (trace?.inName) { e.preventDefault(); stepName(-1); } });
+$('next-btn').addEventListener('click', e => { if (trace?.inName) { e.preventDefault(); stepName(1); } });
+$('name-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const input = $('name-input');
+  if (startName(input.value)) { input.value = ''; return; }
+  input.classList.remove('shake');
+  void input.offsetWidth;
+  input.classList.add('shake');
+});
+$('name-chips').addEventListener('click', e => {
+  const { name, remove } = e.target.dataset;
+  if (name) startName(name);
+  if (remove) { saveNames(loadNames().filter(n => n !== remove)); renderNames(); }
+});
+$('final-again').addEventListener('click', () => { if (finals) startFinals(); });
+$('final-speak').addEventListener('click', sayFinalBase);
+$('final-letter').addEventListener('click', sayFinalBase);
+$('final-choices').addEventListener('click', e => {
+  const btn = e.target.closest('.pic');
+  if (btn) pickFinal(btn);
+});
+$('order-again').addEventListener('click', () => { if (order) startOrder(order.cfg); });
 $('first-again').addEventListener('click', () => { if (first) startFirst(first.level); });
 $('first-speak').addEventListener('click', sayFirstLetter);
 $('first-letter').addEventListener('click', sayFirstLetter);
@@ -1042,13 +1559,13 @@ $('first-choices').addEventListener('click', e => {
   const btn = e.target.closest('.pic');
   if (btn) pickFirst(btn);
 });
-$('names-again').addEventListener('click', () => { if (names) startNames(names.level); });
+$('names-again').addEventListener('click', () => { if (names) startNames(names.cfg); });
 $('names-speak').addEventListener('click', sayName);
 $('names-cards').addEventListener('click', e => {
   const btn = e.target.closest('.namecard');
   if (btn) pickName(btn);
 });
-$('find-again').addEventListener('click', () => { if (find) startFind(); });
+$('find-again').addEventListener('click', () => { if (find) startFind(find.cfg); });
 $('find-speak').addEventListener('click', sayFindLetter);
 $('find-letter').addEventListener('click', sayFindLetter);
 $('find-tiles').addEventListener('click', e => {
@@ -1066,8 +1583,27 @@ $('pop-sky').addEventListener('pointerdown', e => {
   const b = e.target.closest('.balloon');
   if (b) hitBalloon(b);
 });
+$('count-again').addEventListener('click', () => { if (count) startCount(count.max); });
+$('count-speak').addEventListener('click', () => play('q-count', 'כמה יש?'));
+$('count-box').addEventListener('click', e => { if (count && !count.locked) countObject(e.target.closest('.obj'), count.tally); });
+$('count-cards').addEventListener('click', e => {
+  const btn = e.target.closest('.namecard');
+  if (btn) pickCount(btn);
+});
+$('more-again').addEventListener('click', () => { if (more) startMore(more.max); });
+$('more-speak').addEventListener('click', () => play('q-more', 'איפה יש יותר?'));
+['more-a', 'more-b'].forEach(id => $(id).addEventListener('click', () => pickMore($(id))));
+$('add-again').addEventListener('click', () => { if (add) startAdd(add.max); });
+$('add-speak').addEventListener('click', () => play('q-add', 'כמה יש ביחד?'));
+['add-a', 'add-b'].forEach(id => $(id).addEventListener('click', e => {
+  if (add && !add.locked) countObject(e.target.closest('.obj'), add.tally);
+}));
+$('add-cards').addEventListener('click', e => {
+  const btn = e.target.closest('.namecard');
+  if (btn) pickAdd(btn);
+});
 $('speak-btn').addEventListener('click', () => {
-  if (trace) play(letterAudio(trace.idx), LETTERS[trace.idx].name);
+  if (trace) play(trace.audio, trace.letter.name);
 });
 window.addEventListener('hashchange', route);
 route();
