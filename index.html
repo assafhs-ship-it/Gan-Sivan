@@ -10,11 +10,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=1.2">
+  <!-- the site title only: a child's-handwriting font, loaded just for its letters -->
+  <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@800&text=%D7%94%D7%92%D7%9F%20%D7%A9%D7%9C%20%D7%A1%D7%99%D7%95%D7%9F&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=2.4">
 </head>
 <body>
 
-  <!-- Landing page: the two subjects -->
+  <!-- Landing page: the three sections -->
   <section id="home" class="screen">
     <!-- The kindergarten's song: tap to play, tap again to stop -->
     <button class="song-btn" id="song-btn" type="button" aria-pressed="false" aria-label="לנגן את השיר של הגן">
@@ -49,12 +51,19 @@
 
     <nav class="menu" aria-label="נושאים">
       <a class="menu-card" href="#abc">
+        <span class="sparkle" aria-hidden="true">✨</span><span class="sparkle" aria-hidden="true">⭐</span>
         <span class="menu-icon menu-icon-text" aria-hidden="true">אבג</span>
         <span class="menu-title">אותיות</span>
       </a>
       <a class="menu-card menu-purple" href="#numbers">
+        <span class="sparkle" aria-hidden="true">✨</span><span class="sparkle" aria-hidden="true">⭐</span>
         <span class="menu-icon menu-icon-text" aria-hidden="true" dir="ltr">123</span>
         <span class="menu-title">מספרים</span>
+      </a>
+      <a class="menu-card menu-green" href="#games">
+        <span class="sparkle" aria-hidden="true">✨</span><span class="sparkle" aria-hidden="true">⭐</span>
+        <span class="menu-icon menu-icon-text" aria-hidden="true">🎮</span>
+        <span class="menu-title">משחקים</span>
       </a>
     </nav>
 
@@ -71,7 +80,7 @@
       <h2>אותיות</h2>
       <span class="topbar-spacer"></span>
     </div>
-    <nav class="menu menu-grid" aria-label="תרגילי אותיות">
+    <nav class="menu menu-grid menu-cols-4" aria-label="תרגילי אותיות">
       <a class="menu-card" href="#letters">
         <span class="menu-icon" aria-hidden="true">✏️</span>
         <span class="menu-title">כתיבת אותיות</span>
@@ -107,6 +116,10 @@
       <a class="menu-card menu-orange" href="#final">
         <span class="menu-icon menu-icon-text" aria-hidden="true">ם</span>
         <span class="menu-title">אות סופית</span>
+      </a>
+      <a class="menu-card menu-purple" href="#beats">
+        <span class="menu-icon" aria-hidden="true">🗣️</span>
+        <span class="menu-title">כמה צלילים?</span>
       </a>
     </nav>
   </section>
@@ -146,6 +159,53 @@
       <a class="menu-card menu-pink" href="#add">
         <span class="menu-icon" aria-hidden="true">➕</span>
         <span class="menu-title">חיבור</span>
+      </a>
+    </nav>
+  </section>
+
+  <!-- Games: menu -->
+  <section id="games" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#" aria-label="לדף הבית">🏠</a>
+      <h2>משחקים</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <nav class="menu menu-grid" aria-label="משחקים">
+      <a class="menu-card menu-blue" href="#road">
+        <span class="menu-icon" aria-hidden="true">🚗</span>
+        <span class="menu-title">מסלול האותיות</span>
+      </a>
+      <a class="menu-card menu-pink" href="#train">
+        <span class="menu-icon" aria-hidden="true">🚂</span>
+        <span class="menu-title">רכבת האותיות</span>
+      </a>
+      <a class="menu-card menu-yellow" href="#monkey">
+        <span class="menu-icon" aria-hidden="true">🐵</span>
+        <span class="menu-title">הקוף והבננות</span>
+      </a>
+      <a class="menu-card menu-teal" href="#fish">
+        <span class="menu-icon" aria-hidden="true">🐠</span>
+        <span class="menu-title">הדג הרעב</span>
+      </a>
+      <a class="menu-card menu-orange" href="#tower">
+        <span class="menu-icon" aria-hidden="true">🧱</span>
+        <span class="menu-title">מגדל האותיות</span>
+      </a>
+      <a class="menu-card menu-green" href="#frog">
+        <span class="menu-icon" aria-hidden="true">🐸</span>
+        <span class="menu-title">הצפרדע והאבנים</span>
+      </a>
+      <a class="menu-card menu-purple" href="#feed">
+        <span class="menu-icon" aria-hidden="true">🐰</span>
+        <span class="menu-title">האכלת החיות</span>
+      </a>
+      <a class="menu-card menu-navy" href="#numtrain">
+        <span class="menu-icon" aria-hidden="true">🚃</span>
+        <span class="menu-title">רכבת המספרים</span>
+      </a>
+      <a class="menu-card " href="#lift">
+        <span class="menu-icon" aria-hidden="true">🏢</span>
+        <span class="menu-title">המעלית</span>
       </a>
     </nav>
   </section>
@@ -477,6 +537,289 @@
     </div>
   </section>
 
+  <!-- Letter road: drive the car through the letters in order -->
+  <section id="road" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#games" aria-label="חזרה למשחקים">✖</a>
+      <h2>מסלול האותיות</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <div class="road-map" id="road-map" aria-hidden="true"></div>
+    <p class="game-hint">לוחצים על האות הבאה לפי הסדר, והמכונית נוסעת אליה</p>
+    <div class="road-play" id="road-play">
+      <div class="road-scene" id="road-scene">
+        <div class="road-sun" aria-hidden="true"></div>
+        <div class="road-cloud" aria-hidden="true"></div>
+        <div class="road-cloud road-cloud-2" aria-hidden="true"></div>
+        <div class="road-trees" aria-hidden="true"></div>
+        <div class="road" id="road-track">
+          <div class="road-lines" aria-hidden="true"></div>
+          <div class="road-world" id="road-world"></div>
+          <div class="car" id="road-car" style="--lane: 1">
+            <span class="car-puff" aria-hidden="true"></span><span class="car-puff" aria-hidden="true"></span>
+            <svg viewBox="0 0 140 84" aria-hidden="true">
+            <ellipse cx="72" cy="78" rx="58" ry="5" fill="rgba(43,45,91,0.18)"/>
+            <g class="car-body">
+              <path d="M12,54 Q8,40 24,37 L40,35 L55,15 Q59,10 67,10 L101,10 Q110,10 114,17 L125,35 Q134,37 134,48 L134,58 Q134,64 128,64 L18,64 Q12,64 12,58 Z" fill="#ff7a59"/>
+              <path d="M45,35 L58,17 Q60,15 64,15 L83,15 L83,35 Z" fill="#bfe6ff"/>
+              <path d="M88,15 L103,15 Q107,15 109,19 L118,35 L88,35 Z" fill="#bfe6ff"/>
+              <circle cx="72" cy="26" r="7" fill="#ffd9b3"/>
+              <circle cx="69.5" cy="25" r="1.1" fill="#2b2d5b"/><circle cx="74.5" cy="25" r="1.1" fill="#2b2d5b"/>
+              <path d="M69,28.5 Q72,31 75,28.5" stroke="#2b2d5b" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+              <path d="M64,20 Q72,13 80,20" stroke="#f25c54" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <rect x="20" y="47" width="110" height="5" rx="2.5" fill="#ffffff" opacity="0.7"/>
+              <ellipse cx="16" cy="45" rx="4" ry="3.5" fill="#ffe680"/>
+              <rect x="129" y="41" width="5" height="7" rx="2" fill="#e5283c"/>
+            </g>
+            <g class="wheel"><circle cx="38" cy="64" r="13" fill="#2b2d5b"/><circle cx="38" cy="64" r="5.5" fill="#dfe3f0"/><path d="M38,53 V75 M27,64 H49" stroke="#dfe3f0" stroke-width="2.5"/></g>
+            <g class="wheel"><circle cx="108" cy="64" r="13" fill="#2b2d5b"/><circle cx="108" cy="64" r="5.5" fill="#dfe3f0"/><path d="M108,53 V75 M97,64 H119" stroke="#dfe3f0" stroke-width="2.5"/></g>
+          </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="order-done" id="road-done" hidden>
+      <div class="done-stars" aria-hidden="true">🏁⭐⭐⭐🏁</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="road-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Games ===== -->
+
+  <section id="train-game" class="screen game-screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" id="train-back" href="#games" aria-label="חזרה למשחקים">✖</a>
+      <h2 id="train-title">רכבת האותיות</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <div class="dots" id="train-dots" aria-hidden="true"></div>
+    <p class="game-hint" id="train-hint">לוחצים על האותיות לפי הסדר כדי למלא את הקרונות</p>
+    <div class="game-play" id="train-play">
+      <div class="train-scene" id="train-scene">
+        <div class="train-hills" aria-hidden="true"></div>
+        <div class="train" id="train">
+          <div class="train-engine"><span class="train-smoke" aria-hidden="true"></span><span class="train-smoke" aria-hidden="true"></span>
+            <svg class="loco" viewBox="0 0 110 80" aria-hidden="true">
+              <rect x="56" y="14" width="44" height="46" rx="6" fill="#e5283c"/>
+              <rect x="63" y="21" width="30" height="17" rx="4" fill="#bfe6ff"/>
+              <rect x="52" y="8" width="52" height="9" rx="4.5" fill="#2f3e9e"/>
+              <rect x="12" y="30" width="48" height="30" rx="11" fill="#3aa0e8"/>
+              <rect x="22" y="12" width="13" height="20" rx="3" fill="#2b2d5b"/>
+              <path d="M12,60 L2,70 L24,70 Z" fill="#ffd23f"/>
+              <circle cx="11" cy="42" r="4.5" fill="#ffe680"/>
+              <g class="wheel"><circle cx="30" cy="66" r="10" fill="#2b2d5b"/><circle cx="30" cy="66" r="4" fill="#dfe3f0"/></g>
+              <g class="wheel"><circle cx="78" cy="66" r="11" fill="#2b2d5b"/><circle cx="78" cy="66" r="4.5" fill="#dfe3f0"/></g>
+            </svg>
+          </div>
+          <div class="train-wagons" id="train-wagons"></div>
+        </div>
+        <div class="train-rail" aria-hidden="true"></div>
+      </div>
+      <div class="train-pile" id="train-pile"></div>
+    </div>
+    <div class="order-done" id="train-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="train-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="monkey-game" class="screen game-screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#games" aria-label="חזרה למשחקים">✖</a>
+      <h2>הקוף והבננות</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <div class="dots" id="monkey-dots" aria-hidden="true"></div>
+    <p class="game-hint">מקשיבים לאות ולוחצים על הבננה הנכונה</p>
+    <div class="game-play" id="monkey-play">
+      <div class="monkey-scene" id="monkey-scene">
+        <button class="scene-speak scene-speak-left" id="monkey-speak" type="button" aria-label="להשמיע שוב את שם האות">🔊</button>
+        <div class="monkey-tree" aria-hidden="true"><div class="monkey-trunk"></div><div class="monkey-leaves"></div></div>
+        <div class="monkey-bananas" id="monkey-bananas"></div>
+        <div class="monkey" id="monkey" aria-hidden="true">🐵</div>
+      </div>
+    </div>
+    <div class="order-done" id="monkey-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="monkey-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="fish-game" class="screen game-screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#games" aria-label="חזרה למשחקים">✖</a>
+      <h2>הדג הרעב</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <div class="dots" id="fish-dots" aria-hidden="true"></div>
+    <p class="game-hint">לוחצים על הדגים עם האות שהלווייתן רוצה</p>
+    <div class="game-play" id="fish-play">
+      <div class="fish-tank" id="fish-tank">
+        <button class="scene-speak" id="fish-speak" type="button" aria-label="להשמיע שוב את שם האות">🔊</button>
+        <div class="fish-weed" aria-hidden="true"></div><div class="fish-weed fish-weed-2" aria-hidden="true"></div>
+        <div class="fish-bubbles" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="fish-swim" id="fish-swim"></div>
+        <div class="big-fish" id="big-fish"><span class="big-fish-body" aria-hidden="true">🐳</span><span class="big-fish-says" id="fish-target"></span></div>
+        <div class="find-marks fish-marks" id="fish-marks" aria-hidden="true"></div>
+      </div>
+    </div>
+    <div class="order-done" id="fish-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="fish-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="tower-game" class="screen game-screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#games" aria-label="חזרה למשחקים">✖</a>
+      <h2>מגדל האותיות</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <div class="dots" id="tower-dots" aria-hidden="true"></div>
+    <p class="game-hint">בונים מגדל: לוחצים על האות הבאה לפי הסדר</p>
+    <div class="game-play" id="tower-play">
+      <div class="tower-scene" id="tower-scene">
+        <div class="tower-choices" id="tower-choices"></div>
+        <div class="tower-stack" id="tower-stack"></div>
+        <div class="tower-ground" aria-hidden="true"></div>
+      </div>
+    </div>
+    <div class="order-done" id="tower-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="tower-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="frog-game" class="screen game-screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#games" aria-label="חזרה למשחקים">✖</a>
+      <h2>הצפרדע והאבנים</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <div class="dots" id="frog-dots" aria-hidden="true"></div>
+    <p class="game-hint">עוזרים לצפרדע לקפוץ על האבנים לפי הסדר: <bdi dir="ltr">1, 2, 3...</bdi></p>
+    <div class="game-play" id="frog-play">
+      <div class="frog-river" id="frog-river" dir="ltr">
+        <div class="frog-bank" aria-hidden="true"></div>
+        <div class="frog-bank frog-bank-far" aria-hidden="true">🏁</div>
+        <div class="frog-stones" id="frog-stones"></div>
+        <div class="frog" id="frog" aria-hidden="true"><span>🐸</span></div>
+      </div>
+    </div>
+    <div class="order-done" id="frog-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="frog-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="feed-game" class="screen game-screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#games" aria-label="חזרה למשחקים">✖</a>
+      <h2>האכלת החיות</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <div class="dots" id="feed-dots" aria-hidden="true"></div>
+    <p class="game-hint">שמים בצלחת אוכל כמו המספר בשלט, ולוחצים ✔️</p>
+    <div class="game-play" id="feed-play">
+      <div class="feed-scene" id="feed-scene" dir="ltr">
+        <button class="scene-speak scene-speak-left" id="feed-speak" type="button" aria-label="להשמיע שוב את המספר">🔊</button>
+        <div class="feed-animal"><div class="feed-sign" id="feed-sign"></div><div class="feed-face" id="feed-face" aria-hidden="true"></div></div>
+        <div class="feed-plate" id="feed-plate" aria-label="הצלחת"></div>
+        <div class="feed-pile" id="feed-pile" aria-label="האוכל"></div>
+      </div>
+      <button class="btn btn-go feed-done" id="feed-check" type="button" aria-label="סיימתי">✔️</button>
+    </div>
+    <div class="order-done" id="feed-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="feed-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="lift-game" class="screen game-screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#games" aria-label="חזרה למשחקים">✖</a>
+      <h2>המעלית</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <div class="dots" id="lift-dots" aria-hidden="true"></div>
+    <p class="game-hint">עזרו לסיון להגיע לקומה שלה: מקשיבים ולוחצים על הכפתור הנכון</p>
+    <div class="game-play" id="lift-play">
+      <div class="lift-scene" dir="ltr">
+        <button class="scene-speak" id="lift-speak" type="button" aria-label="להשמיע שוב את הקומה">🔊</button>
+        <div class="lift-building" id="lift-building">
+          <div class="lift-roof" aria-hidden="true"><span class="lift-motor"></span></div>
+          <div class="lift-floors" id="lift-floors" aria-hidden="true"></div>
+          <div class="lift-shaft" aria-hidden="true">
+            <div class="lift-car" id="lift-car"><img class="lift-kid" src="images/sivan.png" alt=""><span class="lift-door"></span><span class="lift-door lift-door-r"></span></div>
+          </div>
+        </div>
+        <div class="lift-controls">
+          <div class="lift-display" aria-hidden="true"><span id="lift-arrow"></span><b id="lift-now">1</b></div>
+          <div class="lift-panel" id="lift-panel"></div>
+        </div>
+      </div>
+    </div>
+    <div class="order-done" id="lift-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="lift-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- How many sounds in a word -->
+  <section id="beats" class="screen num-game" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#abc" aria-label="חזרה לאותיות">✖</a>
+      <h2>כמה צלילים?</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <div class="dots" id="beats-dots" aria-hidden="true"></div>
+    <div class="order-play" id="beats-play">
+      <button class="picture-card" id="beats-pic" type="button"></button>
+      <div class="clap-row" id="beats-claps" aria-hidden="true"></div>
+      <div class="name-cards" id="beats-cards" dir="ltr"></div>
+    </div>
+    <div class="order-done" id="beats-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="beats-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
   <!-- ===== Numbers ===== -->
 
   <!-- Writing numbers: digit picker (tracing itself uses the #trace screen) -->
@@ -674,6 +1017,6 @@
     <div id="all-grid" class="all-grid"></div>
   </section>
 
-  <script src="script.js?v=1.2"></script>
+  <script src="script.js?v=2.4"></script>
 </body>
 </html>

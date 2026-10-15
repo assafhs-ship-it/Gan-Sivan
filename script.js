@@ -1,4 +1,4 @@
-const APP_VERSION = '1.2';
+const APP_VERSION = '2.4';
 
 // Each letter is drawn on a 200x200 board. `strokes` are SVG paths, in the
 // order the child writes them; each path runs in the writing direction.
@@ -1386,6 +1386,812 @@ function pickAdd(btn) {
   }, 2000);
 }
 
+// ---------- How many sounds ----------
+
+// Words from WORDS sorted by how many sounds (צלילים) they have, as taught in kindergarten:
+// every consonant with its vowel is one sound — כֶּ-לֶ-ב is 3, אֲ-נָ-נָ-ס is 4. A ו or י that
+// is only a vowel and a silent final ה don't count (בָּ-לוֹ-ן is 3, בָּ-נָ-נָה is 3).
+const BEATS = {
+  2: 'אף דג דוב הר יד לב נר סוס סירה עץ עוגה פיל פרה פיצה צב קוף תות',
+  3: 'אריה אוזן בלון בננה בית גזר גלידה גמל גיטרה דבורה דלת ורד וופל זברה זאב זחל חתול חזיר חציל טווס ירח ' +
+     'כלב כדור כובע כוכב לימון לחם מטוס נחש נמלה נעל ספר פרח ציפור קשת קיפוד קובייה רובוט רדיו שמש שעון שועל תפוח תינוק',
+  4: 'אבטיח אננס ברווז חילזון טלפון ינשוף מפתח מטרייה סוכרייה עכבר ענבים עיפרון פרפר רכבת שוקולד',
+  5: 'היפופוטם טרקטור לווייתן צפרדע תרנגול',
+};
+const BEAT_WORDS = Object.entries(BEATS).flatMap(([beats, words]) => words.split(' ').map(text => {
+  const letter = LETTERS.findIndex(l => l.ch === text[0]);
+  return { beats: +beats, text, letter, word: WORDS[letter].findIndex(w => w[0] === text) };
+}));
+const BEATS_MIN = 2;
+const BEATS_MAX = 5;
+
+let beats = null;
+
+function startBeats() {
+  beats = { round: 0, used: [], item: null, locked: false };
+  $('beats-done').hidden = true;
+  $('beats-play').hidden = false;
+  preload('bravo');
+  nextBeatsRound();
+}
+
+function nextBeatsRound() {
+  const b = beats;
+  // A different number of sounds from last time, so the answer keeps changing.
+  const count = pickOne(range(BEATS_MIN, BEATS_MAX).filter(n => n !== b.item?.beats));
+  b.item = pickOne(BEAT_WORDS.filter(w => w.beats === count && !b.used.includes(w.text)));
+  b.used.push(b.item.text);
+  b.locked = false;
+
+  renderDots('beats-dots', b.round, NUM_ROUNDS);
+  $('beats-pic').textContent = WORDS[b.item.letter][b.item.word][1];
+  $('beats-pic').setAttribute('aria-label', `להשמיע: ${b.item.text}`);
+  $('beats-claps').innerHTML = '';
+  $('beats-cards').innerHTML = range(BEATS_MIN, BEATS_MAX).map(n =>
+    `<button class="namecard clap-card" type="button" data-value="${n}" aria-label="${NUMBERS[n]}">${n}` +
+    `<span aria-hidden="true">${'●'.repeat(n)}</span></button>`).join('');
+
+  preload(wordAudio(b.item.letter, b.item.word));
+  setTimeout(() => { if (beats === b && !b.locked) sayBeatsWord(); }, 400);
+}
+
+function sayBeatsWord() {
+  if (beats) play(wordAudio(beats.item.letter, beats.item.word), beats.item.text);
+}
+
+function pickBeats(btn) {
+  const b = beats;
+  if (!b || b.locked || btn.classList.contains('off')) return;
+  if (!answerCard(btn, b.item.beats, 'beats-cards')) {
+    setTimeout(() => { if (beats === b && !b.locked) sayBeatsWord(); }, 700);
+    return;
+  }
+
+  // Count the word out: the word once more, then one dot and one tap sound per צליל.
+  b.locked = true;
+  b.round++;
+  renderDots('beats-dots', b.round, NUM_ROUNDS);
+  setTimeout(() => { if (beats === b) sayBeatsWord(); }, 350);
+  for (let k = 0; k < b.item.beats; k++) {
+    setTimeout(() => {
+      if (beats !== b) return;
+      $('beats-claps').insertAdjacentHTML('beforeend', '<i></i>');
+      popSound();
+    }, 1400 + k * 450);
+  }
+  setTimeout(() => {
+    if (beats !== b) return;
+    if (b.round >= NUM_ROUNDS) finishGame('beats');
+    else nextBeatsRound();
+  }, 2600 + b.item.beats * 450);
+}
+
+// ---------- Letter road ----------
+
+// The car drives through the letters in alphabet order (no final letters). At each stop three
+// letter bubbles wait in the three lanes; the child taps the next letter. Right: the car drives
+// into it, it bursts and its name is spoken. Wrong: the car bumps it and backs up to try again.
+// The car stays put on screen: the road, the trees and the bubbles move under it.
+
+const ROAD_LANES = 3;
+
+let road = null;
+
+function startRoad() {
+  road = { next: 0, lane: 1, locked: true };
+  $('road-done').hidden = true;
+  $('road-play').hidden = false;
+  $('road-car').style.setProperty('--lane', 1);
+  preload('bravo');
+  renderRoadMap();
+  placeGates(true);
+}
+
+// The whole alphabet along the top, so the child sees where the car is on its trip.
+function renderRoadMap() {
+  $('road-map').innerHTML = LETTERS.map((l, i) =>
+    `<i class="${i < road.next ? 'done' : i === road.next ? 'now' : ''}">${l.ch}</i>`).join('');
+}
+
+// Three bubbles: the next letter and two of its neighbours in the alphabet, which makes the
+// choice about order. They drive in from the far side of the road.
+function placeGates(first) {
+  const r = road;
+  const n = r.next;
+  const near = shuffle(range(Math.max(0, n - 3), Math.min(LETTERS.length - 1, n + 3)).filter(i => i !== n)).slice(0, ROAD_LANES - 1);
+  const letters = shuffle([n, ...near]);
+  const world = $('road-world');
+
+  world.style.transition = 'none';
+  world.style.transform = first ? 'translateX(0)' : 'translateX(-70%)';
+  world.innerHTML = letters.map((i, lane) =>
+    `<button class="gate" type="button" data-letter="${i}" style="--lane: ${lane}; --hue: ${(n + lane) % 6}" aria-label="${LETTERS[i].name}">${LETTERS[i].ch}</button>`).join('');
+  preload(letterAudio(n));
+
+  if (first) { r.locked = false; return; }
+  void world.offsetWidth;
+  drive(world, 'translateX(0)', 900, 'ease-out');
+  setTimeout(() => { if (road === r) r.locked = false; }, 900);
+}
+
+// Moves the bubbles (and with them the road) under the car for `ms`; reversed when backing up.
+function drive(world, transform, ms, easing, reverse) {
+  const scene = $('road-scene');
+  world.style.transition = `transform ${ms}ms ${easing}`;
+  world.style.transform = transform;
+  scene.classList.add('driving');
+  scene.classList.toggle('reversing', !!reverse);
+  engine(ms, reverse);
+  clearTimeout(drive.stop);
+  drive.stop = setTimeout(() => scene.classList.remove('driving', 'reversing'), ms);
+}
+
+function pickGate(gate) {
+  const r = road;
+  if (!r || r.locked || gate.classList.contains('off')) return;
+  r.locked = true;
+
+  // Change lane first, then drive up to the bubble's edge.
+  const lane = +gate.style.getPropertyValue('--lane');
+  const car = $('road-car');
+  const world = $('road-world');
+  const laneDelay = lane === r.lane ? 0 : 400;
+  r.lane = lane;
+  car.style.setProperty('--lane', lane);
+
+  setTimeout(() => {
+    if (road !== r) return;
+    const gap = car.getBoundingClientRect().left - gate.getBoundingClientRect().right + 4;
+    const right = +gate.dataset.letter === r.next;
+    drive(world, `translateX(${gap}px)`, 1000, 'ease-in');
+
+    setTimeout(() => {
+      if (road !== r) return;
+      if (!right) {
+        // Bump, then back up a little for another try; that bubble is out of the race.
+        boop();
+        car.classList.add('bump');
+        gate.classList.add('off');
+        setTimeout(() => {
+          car.classList.remove('bump');
+          if (road !== r) return;
+          drive(world, 'translateX(0)', 900, 'ease-out', true);
+          setTimeout(() => { if (road === r) r.locked = false; }, 900);
+        }, 450);
+        return;
+      }
+
+      gate.classList.add('popped');
+      ding();
+      play(letterAudio(r.next), LETTERS[r.next].name);
+      r.next++;
+      renderRoadMap();
+      if (r.next >= LETTERS.length) { setTimeout(() => { if (road === r) finishGame('road'); }, 1600); return; }
+      // Drive on past the stop; the next bubbles arrive.
+      setTimeout(() => {
+        if (road !== r) return;
+        world.querySelectorAll('.gate:not(.popped)').forEach(g => g.classList.add('gone'));
+        drive(world, `translateX(calc(${gap}px + 40%))`, 700, 'linear');
+        setTimeout(() => { if (road === r) placeGates(false); }, 700);
+      }, 900);
+    }, 1000);
+  }, laneDelay);
+}
+
+// A soft engine hum while the car moves; lower when backing up.
+function engine(ms, reverse) {
+  const ctx = getAudio();
+  if (!ctx) return;
+  const osc = ctx.createOscillator();
+  const filter = ctx.createBiquadFilter();
+  const gain = ctx.createGain();
+  const now = ctx.currentTime, end = now + ms / 1000;
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(reverse ? 95 : 70, now);
+  osc.frequency.linearRampToValueAtTime(reverse ? 65 : 115, end);
+  filter.type = 'lowpass';
+  filter.frequency.value = 420;
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(0.07, now + 0.12);
+  gain.gain.exponentialRampToValueAtTime(0.0001, end);
+  osc.connect(filter).connect(gain).connect(ctx.destination);
+  osc.start(now);
+  osc.stop(end);
+}
+
+// ---------- Games: shared pieces ----------
+
+const GAME_ROUNDS = 5;
+
+// Plays the names of a run of items one after another.
+function sayInTurn(items, gap) {
+  items.forEach((item, k) => setTimeout(() => play(item.audio, item.name), k * gap));
+}
+
+// A two-note train whistle.
+function toot() {
+  const ctx = getAudio();
+  if (!ctx) return;
+  [0, 0.32].forEach(start => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const t = ctx.currentTime + start;
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(start ? 523 : 659, t);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.08, t + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.3);
+  });
+}
+
+function restartAnimation(el, cls) {
+  el.classList.remove(cls);
+  void el.offsetWidth;
+  el.classList.add(cls);
+}
+
+// ---------- Train (letters or numbers) ----------
+
+// A train arrives with empty wagons; the child taps the items from the pile in order and each
+// one jumps into the next wagon. A full train whistles and leaves. The engine always leads:
+// letters fill right to left and the train leaves to the right, numbers the other way round.
+const TRAIN_ROUNDS = 4;
+
+let train = null;
+
+// cfg: { items, run, ltr, title, hint }
+function startTrain(cfg) {
+  train = { cfg, round: 0, lastStart: -1, run: [], pos: 0, locked: true };
+  $('train-title').textContent = cfg.title;
+  $('train-hint').textContent = cfg.hint;
+  $('train-scene').dir = $('train-pile').dir = cfg.ltr ? 'ltr' : 'rtl';
+  $('train-done').hidden = true;
+  $('train-play').hidden = false;
+  preload('bravo');
+  nextTrainRound();
+}
+
+function nextTrainRound() {
+  const t = train;
+  const { items, run } = t.cfg;
+  let start;
+  do { start = Math.floor(Math.random() * (items.length - run + 1)); } while (start === t.lastStart && items.length > run);
+  t.lastStart = start;
+  t.run = range(start, start + run - 1);
+  t.pos = 0;
+  t.locked = true;
+
+  renderDots('train-dots', t.round, TRAIN_ROUNDS);
+  $('train-wagons').innerHTML = t.run.map(() => '<div class="wagon"><span></span></div>').join('');
+  $('train-pile').innerHTML = shuffle([...t.run]).map(i =>
+    `<button class="namecard pile-tile" type="button" data-item="${i}" aria-label="${items[i].name}">${items[i].ch}</button>`).join('');
+  t.run.forEach(i => preload(items[i].audio));
+
+  const el = $('train');
+  el.className = 'train arriving';
+  setTimeout(() => {
+    if (train !== t) return;
+    el.className = 'train';
+    t.locked = false;
+  }, 1300);
+}
+
+function pickTrain(btn) {
+  const t = train;
+  if (!t || t.locked || btn.classList.contains('used')) return;
+  const idx = +btn.dataset.item;
+  const item = t.cfg.items[idx];
+
+  if (idx !== t.run[t.pos]) {
+    boop();
+    restartAnimation(btn, 'shake');
+    return;
+  }
+
+  btn.classList.add('used');
+  const wagon = $('train-wagons').children[t.pos];
+  wagon.firstChild.textContent = item.ch;
+  wagon.classList.add('full');
+  play(item.audio, item.name);
+  t.pos++;
+  if (t.pos < t.run.length) return;
+
+  t.locked = true;
+  t.round++;
+  renderDots('train-dots', t.round, TRAIN_ROUNDS);
+  setTimeout(() => {
+    if (train !== t) return;
+    toot();
+    $('train').className = 'train leaving';
+  }, 700);
+  setTimeout(() => {
+    if (train !== t) return;
+    if (t.round >= TRAIN_ROUNDS) finishGame('train');
+    else nextTrainRound();
+  }, 2600);
+}
+
+// ---------- Monkey and bananas ----------
+
+// The voice names a letter; the child taps the banana that carries it, and it drops to the monkey.
+const BANANA_SPOTS = [[12, 18], [34, 8], [58, 10], [80, 20], [24, 40], [68, 38]];
+
+let monkey = null;
+
+function startMonkey() {
+  monkey = { round: 0, used: [], letter: -1, locked: false };
+  $('monkey-done').hidden = true;
+  $('monkey-play').hidden = false;
+  preload('bravo');
+  nextMonkeyRound();
+}
+
+function nextMonkeyRound() {
+  const m = monkey;
+  const all = LETTERS.map((_, i) => i);
+  m.letter = pickOne(all.filter(i => !m.used.includes(i)));
+  m.used.push(m.letter);
+  m.locked = false;
+  const letters = shuffle([m.letter, ...shuffle(all.filter(i => i !== m.letter)).slice(0, BANANA_SPOTS.length - 1)]);
+
+  renderDots('monkey-dots', m.round, GAME_ROUNDS);
+  $('monkey').className = 'monkey';
+  $('monkey-bananas').innerHTML = letters.map((i, k) =>
+    `<button class="banana" type="button" data-letter="${i}" style="left: ${BANANA_SPOTS[k][0]}%; top: ${BANANA_SPOTS[k][1]}%" aria-label="${LETTERS[i].name}">` +
+    `<span class="banana-fruit" aria-hidden="true">🍌</span><b>${LETTERS[i].ch}</b></button>`).join('');
+  preload(letterAudio(m.letter));
+  setTimeout(() => { if (monkey === m && !m.locked) sayMonkey(); }, 400);
+}
+
+function sayMonkey() {
+  if (monkey) play(letterAudio(monkey.letter), LETTERS[monkey.letter].name);
+}
+
+function pickBanana(btn) {
+  const m = monkey;
+  if (!m || m.locked) return;
+  const face = $('monkey');
+
+  if (+btn.dataset.letter !== m.letter) {
+    boop();
+    restartAnimation(btn, 'shake');
+    restartAnimation(face, 'no');
+    setTimeout(() => { if (monkey === m && !m.locked) sayMonkey(); }, 700);
+    return;
+  }
+
+  // The banana drops into the monkey's hands, then the monkey eats it happily.
+  m.locked = true;
+  m.round++;
+  renderDots('monkey-dots', m.round, GAME_ROUNDS);
+  const from = btn.getBoundingClientRect(), to = face.getBoundingClientRect();
+  btn.style.transition = 'transform 0.7s cubic-bezier(0.5, 0, 0.9, 0.6)';
+  btn.style.transform = `translate(${to.left + to.width / 2 - from.left - from.width / 2}px, ${to.top + to.height * 0.3 - from.top - from.height / 2}px)`;
+  btn.classList.add('falling');
+  ding();
+  sayMonkey();
+  setTimeout(() => {
+    if (monkey !== m) return;
+    btn.classList.add('eaten');
+    face.className = 'monkey yum';
+    popSound();
+  }, 700);
+  setTimeout(() => {
+    if (monkey !== m) return;
+    if (m.round >= GAME_ROUNDS) finishGame('monkey');
+    else nextMonkeyRound();
+  }, 2200);
+}
+
+// ---------- The hungry fish ----------
+
+// The big fish shows (and says) the letter it wants; small fish carrying letters swim past.
+// Tapping a right one sends it into the big fish's mouth. FISH_NEED right fish end a round.
+const FISH_NEED = 2;
+const FISH_KINDS = ['🐟', '🐠', '🐡'];
+
+let fish = null;
+
+function startFish() {
+  if (fish) clearInterval(fish.timer);
+  const f = fish = { round: 0, used: [], letter: -1, got: 0, sinceRight: 3, locked: false, timer: 0 };
+  $('fish-done').hidden = true;
+  $('fish-play').hidden = false;
+  preload('bravo');
+  f.timer = setInterval(() => {
+    if (fish !== f) clearInterval(f.timer);   // the child left the game
+    else spawnFish();
+  }, 1500);
+  nextFishRound();
+}
+
+function nextFishRound() {
+  const f = fish;
+  f.letter = pickOne(LETTERS.map((_, i) => i).filter(i => !f.used.includes(i)));
+  f.used.push(f.letter);
+  f.got = 0;
+  f.sinceRight = 3;
+  f.locked = false;
+  $('fish-swim').innerHTML = '';
+  $('fish-target').textContent = LETTERS[f.letter].ch;
+  renderDots('fish-dots', f.round, GAME_ROUNDS);
+  renderDots('fish-marks', 0, FISH_NEED);
+  preload(letterAudio(f.letter));
+  spawnFish();
+  setTimeout(() => { if (fish === f && !f.locked) sayFish(); }, 400);
+}
+
+function sayFish() {
+  if (fish) play(letterAudio(fish.letter), LETTERS[fish.letter].name);
+}
+
+function spawnFish() {
+  const f = fish;
+  if (!f || f.locked || document.hidden) return;
+  const right = f.sinceRight >= 2 || Math.random() < 0.35;
+  f.sinceRight = right ? 0 : f.sinceRight + 1;
+  const letter = right ? f.letter : pickOne(LETTERS.map((_, i) => i).filter(i => i !== f.letter));
+  const el = document.createElement('button');
+  el.type = 'button';
+  el.className = 'swimmer';
+  el.dataset.letter = letter;
+  el.style.top = `${8 + Math.floor(Math.random() * 3) * 20}%`;
+  el.innerHTML = `<span class="swimmer-fish" aria-hidden="true">${pickOne(FISH_KINDS)}</span><b>${LETTERS[letter].ch}</b>`;
+  el.addEventListener('animationend', e => { if (e.target === el && e.animationName === 'swim') el.remove(); });
+  $('fish-swim').appendChild(el);
+}
+
+function hitFish(el) {
+  const f = fish;
+  if (!f || f.locked || el.classList.contains('caught')) return;
+
+  if (+el.dataset.letter !== f.letter) {
+    boop();
+    restartAnimation(el, 'flip');
+    setTimeout(() => { if (fish === f && !f.locked) sayFish(); }, 700);
+    return;
+  }
+
+  // Freeze it where it is, then let it swim into the big fish's mouth.
+  const tank = $('fish-tank').getBoundingClientRect();
+  const box = el.getBoundingClientRect();
+  const mouth = $('big-fish').getBoundingClientRect();
+  el.classList.add('caught');
+  el.style.left = `${box.left - tank.left}px`;
+  el.style.top = `${box.top - tank.top}px`;
+  void el.offsetWidth;
+  el.style.left = `${mouth.left - tank.left + mouth.width * 0.15}px`;
+  el.style.top = `${mouth.top - tank.top + mouth.height * 0.25}px`;
+  ding();
+  sayFish();
+  setTimeout(() => {
+    el.remove();
+    popSound();
+    restartAnimation($('big-fish'), 'chomp');
+  }, 650);
+
+  f.got++;
+  renderDots('fish-marks', f.got, FISH_NEED);
+  if (f.got < FISH_NEED) return;
+  f.locked = true;
+  f.round++;
+  renderDots('fish-dots', f.round, GAME_ROUNDS);
+  $('fish-swim').querySelectorAll('.swimmer:not(.caught)').forEach(s => s.classList.add('away'));
+  setTimeout(() => {
+    if (fish !== f) return;
+    if (f.round < GAME_ROUNDS) { nextFishRound(); return; }
+    clearInterval(f.timer);
+    $('fish-swim').innerHTML = '';
+    finishGame('fish');
+  }, 1800);
+}
+
+// ---------- Letter tower ----------
+
+// Three blocks float above the tower: the next letter and two of its neighbours. The right one
+// drops onto the top of the tower. After ת a rocket lands on top and takes off.
+const TOWER_SHOWN = 4;   // blocks of the tower kept on screen; the rest have scrolled down
+
+let tower = null;
+
+function startTower() {
+  tower = { next: 0, locked: false };
+  $('tower-done').hidden = true;
+  $('tower-play').hidden = false;
+  $('tower-stack').innerHTML = '';
+  preload('bravo');
+  renderDots('tower-dots', 0, 0);
+  nextTowerChoices();
+}
+
+function nextTowerChoices() {
+  const t = tower;
+  const n = t.next;
+  const near = shuffle(range(Math.max(0, n - 3), Math.min(LETTERS.length - 1, n + 3)).filter(i => i !== n)).slice(0, 2);
+  $('tower-choices').innerHTML = shuffle([n, ...near]).map(i =>
+    `<button class="block" type="button" data-letter="${i}" style="--hue: ${i % 6}" aria-label="${LETTERS[i].name}">${LETTERS[i].ch}</button>`).join('');
+  preload(letterAudio(n));
+  t.locked = false;
+}
+
+function pickBlock(btn) {
+  const t = tower;
+  if (!t || t.locked) return;
+  const letter = +btn.dataset.letter;
+
+  if (letter !== t.next) {
+    boop();
+    restartAnimation(btn, 'shake');
+    return;
+  }
+
+  t.locked = true;
+  const stack = $('tower-stack');
+  const block = document.createElement('div');
+  block.className = 'block placed';
+  block.style.setProperty('--hue', letter % 6);
+  block.textContent = LETTERS[letter].ch;
+  stack.appendChild(block);
+  while (stack.children.length > TOWER_SHOWN) stack.firstChild.remove();
+  $('tower-choices').innerHTML = '';
+  ding();
+  play(letterAudio(letter), LETTERS[letter].name);
+  t.next++;
+
+  if (t.next < LETTERS.length) {
+    setTimeout(() => { if (tower === t) nextTowerChoices(); }, 700);
+    return;
+  }
+  const rocket = document.createElement('div');
+  rocket.className = 'block-rocket';
+  rocket.textContent = '🚀';
+  stack.appendChild(rocket);
+  setTimeout(() => { if (tower === t) { rocket.classList.add('launch'); toot(); } }, 900);
+  setTimeout(() => { if (tower === t) finishGame('tower'); }, 2600);
+}
+
+// ---------- Frog and stones ----------
+
+// Stones numbered 1-10 lie scattered in the river. The frog jumps from stone to stone in order;
+// a wrong stone makes a splash and the frog climbs back onto the last one.
+let frog = null;
+
+function startFrog() {
+  frog = { next: 1, at: null, locked: false };
+  $('frog-done').hidden = true;
+  $('frog-play').hidden = false;
+  preload('bravo');
+  range(1, 10).forEach(n => preload(numAudio(n)));
+
+  // Ten places on a 5 x 2 grid across the river, shaken a little, numbers in random places.
+  const spots = shuffle(range(0, 9)).map(k => [20 + (k % 5) * 15 + (Math.random() * 6 - 3), (k < 5 ? 30 : 70) + (Math.random() * 12 - 6)]);
+  $('frog-stones').innerHTML = range(1, 10).map(n =>
+    `<button class="stone" type="button" data-n="${n}" style="left: ${spots[n - 1][0]}%; top: ${spots[n - 1][1]}%" aria-label="${NUMBERS[n]}">${n}</button>`).join('');
+  moveFrog(6, 50, false);
+  renderDots('frog-dots', 0, 0);
+}
+
+function moveFrog(x, y, hop) {
+  const el = $('frog');
+  frog.at = [x, y];
+  el.style.left = `${x}%`;
+  el.style.top = `${y}%`;
+  if (hop) restartAnimation(el, 'hop');
+}
+
+function pickStone(stone) {
+  const f = frog;
+  if (!f || f.locked || stone.classList.contains('visited')) return;
+  const n = +stone.dataset.n;
+  const x = parseFloat(stone.style.left), y = parseFloat(stone.style.top);
+  f.locked = true;
+
+  if (n !== f.next) {
+    // Jump at it, splash, and climb back.
+    const back = f.at;
+    moveFrog(x, y, true);
+    setTimeout(() => {
+      if (frog !== f) return;
+      boop();
+      popSound();
+      restartAnimation(stone, 'splash');
+      $('frog').classList.add('wet');
+    }, 450);
+    setTimeout(() => {
+      if (frog !== f) return;
+      $('frog').classList.remove('wet');
+      moveFrog(back[0], back[1], true);
+      f.locked = false;
+    }, 1150);
+    return;
+  }
+
+  moveFrog(x, y, true);
+  setTimeout(() => {
+    if (frog !== f) return;
+    stone.classList.add('visited');
+    ding();
+    play(numAudio(n), NUMBERS[n]);
+    f.next++;
+    if (f.next <= 10) { f.locked = false; return; }
+    setTimeout(() => {
+      if (frog !== f) return;
+      moveFrog(94, 50, true);
+      $('frog').classList.add('happy');
+    }, 700);
+    setTimeout(() => { if (frog === f) finishGame('frog'); }, 2200);
+  }, 450);
+}
+
+// ---------- Feeding the animals ----------
+
+// An animal holds a number and wants that much food. The child moves food from the pile to
+// the plate (each piece is counted aloud; a piece on the plate can be taken back) and taps ✔.
+const ANIMALS = [['🐰', '🥕'], ['🐻', '🍯'], ['🐶', '🦴'], ['🐵', '🍌'], ['🐭', '🧀'], ['🐼', '🎋']];
+const FEED_PILE = 12;
+
+let feed = null;
+
+function startFeed() {
+  feed = { round: 0, used: [], n: 0, animal: null, locked: false };
+  $('feed-done').hidden = true;
+  $('feed-play').hidden = false;
+  preload('bravo');
+  range(1, 10).forEach(n => preload(numAudio(n)));
+  nextFeedRound();
+}
+
+function nextFeedRound() {
+  const f = feed;
+  f.n = pickOne(range(1, 10).filter(v => !f.used.includes(v)));
+  f.used.push(f.n);
+  f.animal = pickOne(ANIMALS.filter(a => a !== f.animal));
+  f.locked = false;
+
+  renderDots('feed-dots', f.round, GAME_ROUNDS);
+  $('feed-face').textContent = f.animal[0];
+  $('feed-face').className = 'feed-face';
+  $('feed-sign').textContent = f.n;
+  $('feed-plate').innerHTML = '';
+  $('feed-pile').innerHTML = Array(FEED_PILE).fill(`<button class="food" type="button" aria-label="אוכל">${f.animal[1]}</button>`).join('');
+  setTimeout(() => { if (feed === f && !f.locked) sayFeed(); }, 400);
+}
+
+function sayFeed() {
+  if (feed) play(numAudio(feed.n), NUMBERS[feed.n]);
+}
+
+function moveFood(btn) {
+  const f = feed;
+  if (!f || f.locked) return;
+  const toPlate = btn.parentElement.id === 'feed-pile';
+  (toPlate ? $('feed-plate') : $('feed-pile')).appendChild(btn);
+  restartAnimation(btn, 'land');
+  const count = $('feed-plate').children.length;
+  if (toPlate) play(numAudio(count), NUMBERS[count]);
+}
+
+function checkFeed() {
+  const f = feed;
+  if (!f || f.locked) return;
+  const count = $('feed-plate').children.length;
+  const face = $('feed-face');
+
+  if (count !== f.n) {
+    boop();
+    restartAnimation(face, 'no');
+    setTimeout(() => { if (feed === f && !f.locked) sayFeed(); }, 700);
+    return;
+  }
+
+  f.locked = true;
+  f.round++;
+  renderDots('feed-dots', f.round, GAME_ROUNDS);
+  ding();
+  sayFeed();
+  face.className = 'feed-face yum';
+  setTimeout(() => {
+    if (feed !== f) return;
+    if (f.round >= GAME_ROUNDS) finishGame('feed');
+    else nextFeedRound();
+  }, 2200);
+}
+
+// ---------- The lift ----------
+
+// The voice says "קומה" and a number; the child presses that button. The lift travels floor by
+// floor, saying each floor, and opens its doors on arrival.
+const LIFT_FLOORS = 10;
+
+let lift = null;
+
+function startLift() {
+  lift = { round: 0, floor: 1, target: 0, locked: false };
+  $('lift-done').hidden = true;
+  $('lift-play').hidden = false;
+  preload('bravo');
+  preload('q-floor');
+  range(1, LIFT_FLOORS).forEach(n => preload(numAudio(n)));
+  // Each floor: its number, then a window on each side of the shaft (the <b> keeps the shaft's place).
+  $('lift-floors').innerHTML = range(1, LIFT_FLOORS).reverse().map(n =>
+    `<div class="lift-floor"><span>${n}</span><i></i><b></b><i></i></div>`).join('');
+  // Buttons in two columns, low floors at the bottom, as in a real lift.
+  const rows = range(0, LIFT_FLOORS / 2 - 1).reverse();
+  $('lift-panel').innerHTML = rows.map(r => [2 * r + 1, 2 * r + 2].map(n =>
+    `<button class="lift-btn" type="button" data-n="${n}" aria-label="${NUMBERS[n]}">${n}</button>`).join('')).join('');
+  placeLift(1);
+  $('lift-car').classList.add('open');
+  nextLiftRound();
+}
+
+// Moves the car to a floor and shows it on the display; `dir` is the arrow while riding.
+function placeLift(floor, dir) {
+  $('lift-car').style.bottom = `${(floor - 1) * 100 / LIFT_FLOORS}%`;
+  $('lift-now').textContent = floor;
+  $('lift-arrow').textContent = dir > 0 ? '▲' : dir < 0 ? '▼' : '';
+}
+
+function nextLiftRound() {
+  const l = lift;
+  l.target = pickOne(range(1, LIFT_FLOORS).filter(n => n !== l.floor));
+  l.locked = false;
+  renderDots('lift-dots', l.round, GAME_ROUNDS);
+  document.querySelectorAll('.lift-btn').forEach(b => b.classList.remove('lit', 'wrong'));
+  setTimeout(() => { if (lift === l && !l.locked) sayLift(); }, 400);
+}
+
+function sayLift() {
+  if (!lift) return;
+  const n = lift.target;
+  play('q-floor', 'קומה');
+  setTimeout(() => { if (lift && lift.target === n) play(numAudio(n), NUMBERS[n]); }, 700);
+}
+
+function pickLift(btn) {
+  const l = lift;
+  if (!l || l.locked) return;
+  const n = +btn.dataset.n;
+
+  if (n !== l.target) {
+    boop();
+    restartAnimation(btn, 'wrong');
+    setTimeout(() => { if (lift === l && !l.locked) sayLift(); }, 700);
+    return;
+  }
+
+  // Close the doors, ride one floor at a time saying each floor, then open up.
+  l.locked = true;
+  btn.classList.add('lit');
+  const car = $('lift-car');
+  car.classList.remove('open');
+  const step = n > l.floor ? 1 : -1;
+  $('lift-arrow').textContent = step > 0 ? '▲' : '▼';
+  const floors = range(Math.min(l.floor, n), Math.max(l.floor, n)).filter(v => v !== l.floor);
+  if (step < 0) floors.reverse();
+  floors.forEach((floor, k) => setTimeout(() => {
+    if (lift !== l) return;
+    placeLift(floor, floor === n ? 0 : step);
+    play(numAudio(floor), NUMBERS[floor]);
+  }, 600 + k * 650));
+  const ride = 600 + floors.length * 650;
+  setTimeout(() => {
+    if (lift !== l) return;
+    l.floor = n;
+    car.classList.add('open');
+    ding();
+    l.round++;
+    renderDots('lift-dots', l.round, GAME_ROUNDS);
+  }, ride);
+  setTimeout(() => {
+    if (lift !== l) return;
+    if (l.round >= GAME_ROUNDS) finishGame('lift');
+    else nextLiftRound();
+  }, ride + 1500);
+}
+
 // ---------- Song ----------
 
 // The kindergarten's song plays on the landing page only, so it never talks over an exercise.
@@ -1465,7 +2271,45 @@ function route() {
   const addTo = hash.match(/^add-(5|10)$/);
   const numNames = hash.match(/^numnames-([234])$/);
   const numOrder = hash.match(/^numorder-(10|20)$/);
-  if (digit) {
+  beats = null;
+  road = null;
+  train = null;
+  monkey = null;
+  fish = null;
+  tower = null;
+  frog = null;
+  feed = null;
+  lift = null;
+  if (hash === 'train' || hash === 'numtrain') {
+    show('train-game');
+    startTrain(hash === 'train'
+      ? { items: LETTER_ITEMS, run: 4, ltr: false, title: 'רכבת האותיות', hint: 'לוחצים על האותיות לפי הסדר כדי למלא את הקרונות' }
+      : { items: NUMBER_ITEMS.slice(1, 11), run: 5, ltr: true, title: 'רכבת המספרים', hint: 'לוחצים על המספרים לפי הסדר כדי למלא את הקרונות' });
+  } else if (hash === 'monkey') {
+    show('monkey-game');
+    startMonkey();
+  } else if (hash === 'fish') {
+    show('fish-game');
+    startFish();
+  } else if (hash === 'tower') {
+    show('tower-game');
+    startTower();
+  } else if (hash === 'frog') {
+    show('frog-game');
+    startFrog();
+  } else if (hash === 'feed') {
+    show('feed-game');
+    startFeed();
+  } else if (hash === 'lift') {
+    show('lift-game');
+    startLift();
+  } else if (hash === 'road') {
+    show('road');
+    startRoad();
+  } else if (hash === 'beats') {
+    show('beats');
+    startBeats();
+  } else if (digit) {
     show('trace');
     openDigit(+digit[1]);
   } else if (hash === 'digits') {
@@ -1544,7 +2388,7 @@ function route() {
   } else if (hash === 'letters') {
     renderGrid();
     show('letters');
-  } else if (hash === 'abc' || hash === 'numbers') {
+  } else if (hash === 'abc' || hash === 'numbers' || hash === 'games') {
     show(hash);
   } else if (hash === 'all') {
     show('all');
@@ -1630,6 +2474,59 @@ $('add-speak').addEventListener('click', () => play('q-add', 'כמה יש ביח
 $('add-cards').addEventListener('click', e => {
   const btn = e.target.closest('.namecard');
   if (btn) pickAdd(btn);
+});
+$('beats-again').addEventListener('click', () => { if (beats) startBeats(); });
+$('beats-pic').addEventListener('click', sayBeatsWord);
+$('beats-cards').addEventListener('click', e => {
+  const btn = e.target.closest('.namecard');
+  if (btn) pickBeats(btn);
+});
+$('road-again').addEventListener('click', () => { if (road) startRoad(); });
+$('road-world').addEventListener('click', e => {
+  const gate = e.target.closest('.gate');
+  if (gate) pickGate(gate);
+});
+$('train-again').addEventListener('click', () => { if (train) startTrain(train.cfg); });
+$('train-pile').addEventListener('click', e => {
+  const btn = e.target.closest('.pile-tile');
+  if (btn) pickTrain(btn);
+});
+$('monkey-again').addEventListener('click', startMonkey);
+$('monkey-speak').addEventListener('click', sayMonkey);
+$('monkey-bananas').addEventListener('click', e => {
+  const btn = e.target.closest('.banana');
+  if (btn) pickBanana(btn);
+});
+$('fish-again').addEventListener('click', startFish);
+$('fish-speak').addEventListener('click', sayFish);
+$('big-fish').addEventListener('click', sayFish);
+$('fish-swim').addEventListener('pointerdown', e => {
+  const el = e.target.closest('.swimmer');
+  if (el) hitFish(el);
+});
+$('tower-again').addEventListener('click', startTower);
+$('tower-choices').addEventListener('click', e => {
+  const btn = e.target.closest('.block');
+  if (btn) pickBlock(btn);
+});
+$('frog-again').addEventListener('click', startFrog);
+$('frog-stones').addEventListener('click', e => {
+  const stone = e.target.closest('.stone');
+  if (stone) pickStone(stone);
+});
+$('feed-again').addEventListener('click', startFeed);
+$('feed-speak').addEventListener('click', sayFeed);
+$('feed-sign').addEventListener('click', sayFeed);
+$('feed-check').addEventListener('click', checkFeed);
+['feed-pile', 'feed-plate'].forEach(id => $(id).addEventListener('click', e => {
+  const btn = e.target.closest('.food');
+  if (btn) moveFood(btn);
+}));
+$('lift-again').addEventListener('click', startLift);
+$('lift-speak').addEventListener('click', sayLift);
+$('lift-panel').addEventListener('click', e => {
+  const btn = e.target.closest('.lift-btn');
+  if (btn) pickLift(btn);
 });
 $('song-btn').addEventListener('click', toggleSong);
 $('speak-btn').addEventListener('click', () => {
