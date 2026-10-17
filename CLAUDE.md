@@ -24,7 +24,7 @@ The children can't read: keep text minimal, targets big, and feedback visual and
 
 ## Adding an exercise
 
-The exercise menus are coloured `.menu-card` tiles in a centred `.menu-grid`, ordered by topic (writing, recognising, sounds and words, then the games). Pick the column count so the rows come out even: the letters menu has eighteen tiles and uses `.menu-cols-6` (three rows of six); the numbers menu has eleven and uses `.menu-cols-4` (four, four and three). Add a `.menu-card` link to the subject's menu, a new `<section class="screen">`, and a branch in `route()`. The games share `.level-menu`/`.level-card` (level picker), `.dots` + `renderDots()` (round progress), `.order-play` and `.order-done` (finish panel). Every finish goes through `finishGame(prefix)` (see Finish screen below).
+The exercise menus are coloured `.menu-card` tiles in a centred `.menu-grid`, ordered by topic (writing, recognising, sounds and words, then the games). Pick the column count so the rows come out even: the letters menu has eighteen tiles in the default three columns (six rows, icon above the name, the page scrolls); the numbers menu has eleven and uses `.menu-cols-4` (four, four and three). Add a `.menu-card` link to the subject's menu, a new `<section class="screen">`, and a branch in `route()`. The games share `.level-menu`/`.level-card` (level picker), `.dots` + `renderDots()` (round progress), `.order-play` and `.order-done` (finish panel). Every finish goes through `finishGame(prefix)` (see Finish screen below).
 
 ## Letters (`LETTERS`)
 
