@@ -1,4 +1,4 @@
-const APP_VERSION = '2.8';
+const APP_VERSION = '2.9';
 
 // Each letter is drawn on a 200x200 board. `strokes` are SVG paths, in the
 // order the child writes them; each path runs in the writing direction.
@@ -159,6 +159,7 @@ function play(name, fallbackText) {
 }
 
 function ding() {
+  cheerTick();
   const ctx = getAudio();
   if (!ctx) return;
   const osc = ctx.createOscillator();
@@ -564,6 +565,7 @@ function finishOrderRound() {
   const mine = order;
   mine.locked = true;
   mine.round++;
+  cheerTick();
   renderDots('order-dots', mine.round, ORDER_ROUNDS);
   $('order-seq').classList.add('cheer');
   setTimeout(() => {
@@ -988,6 +990,7 @@ function hitBalloon(b) {
   b.classList.add('popped');
   setTimeout(() => b.remove(), 250);
   popSound();
+  cheerTick();
   p.got++;
   renderDots('pop-marks', p.got, POP_NEED);
   if (p.got < POP_NEED) return;
@@ -2078,6 +2081,7 @@ function pickTrain(btn) {
 
   t.locked = true;
   t.round++;
+  cheerTick();
   renderDots('train-dots', t.round, TRAIN_ROUNDS);
   setTimeout(() => {
     if (train !== t) return;
@@ -2567,6 +2571,88 @@ function pickLift(btn) {
     if (l.round >= GAME_ROUNDS) finishGame('lift');
     else nextLiftRound();
   }, ride + 1500);
+}
+
+// ---------- Celebration ----------
+
+// Every few right answers (a random number from CHEER_MIN to CHEER_MAX, counted across all the
+// exercises) Sivan appears with a thumbs-up and says "כל הכבוד!" or "עבודה טובה!", in one of
+// three animations picked at random: peeking from the corner, in a spotlight with sun rays, or
+// on a gold medal. It never blocks a tap. Right answers are counted where ding() plays, plus the
+// few games that celebrate with another sound; tracing (which dings per stroke) doesn't count.
+const CHEER_MIN = 3, CHEER_MAX = 6;
+const CHEER_MS = 5200;                 // how long it stays on screen
+const CHEER_KINDS = ['peek', 'spotlight', 'medal'];
+
+let cheerCount = 0;
+let cheerAt = CHEER_MIN + Math.floor(Math.random() * (CHEER_MAX - CHEER_MIN + 1));
+let cheerTimer = 0;
+
+function cheerTick() {
+  if (trace) return;
+  if (++cheerCount < cheerAt) return;
+  cheerCount = 0;
+  cheerAt = CHEER_MIN + Math.floor(Math.random() * (CHEER_MAX - CHEER_MIN + 1));
+  setTimeout(celebrate, 900);          // after the answer's own feedback
+}
+
+function celebrate() {
+  const kind = pickOne(CHEER_KINDS);
+  const good = Math.random() < 0.5;
+  const text = good ? 'עבודה טובה!' : 'כל הכבוד!';
+  const sivan = '<img class="cheer-sivan" src="images/sivan.png" alt="">';
+  const parts = {
+    peek: `<div class="cheer-who">${sivan}<span class="cheer-thumb">👍</span></div><div class="cheer-bubble cheer-say">${text}</div>`,
+    spotlight: `<div class="cheer-shade"></div><div class="cheer-rays"></div><div class="cheer-disc">${sivan}</div><span class="cheer-thumb">👍</span><div class="cheer-say">${text}</div>`,
+    medal: `<div class="cheer-medal"><div class="cheer-ribbon l"></div><div class="cheer-ribbon r"></div><div class="cheer-star"></div><div class="cheer-face">${sivan}</div>` +
+      `<span class="cheer-thumb">👍</span><div class="cheer-say">${text}</div>` +
+      '<span class="cheer-spark" style="left:-12%;top:-6%">✨</span><span class="cheer-spark" style="right:-10%;top:4%;animation-delay:-.5s">⭐</span><span class="cheer-spark" style="right:-4%;top:70%;animation-delay:-.2s">✨</span></div>',
+  };
+  const el = $('cheer');
+  el.className = 'cheer';
+  void el.offsetWidth;                 // restart the animation if one is still showing
+  el.innerHTML = parts[kind];
+  el.className = `cheer cheer-${kind}`;
+  jingle();
+  if (kind !== 'peek') confetti();
+  setTimeout(() => play(good ? 'good-job' : 'bravo', text), 700);
+  clearTimeout(cheerTimer);
+  cheerTimer = setTimeout(() => { el.className = 'cheer'; el.innerHTML = ''; }, CHEER_MS);
+}
+
+// A bright rising arpeggio with a shimmer on top: the "you did it" sound.
+function jingle() {
+  const ctx = getAudio();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, k) => {
+    const t = now + k * 0.09;
+    [1, 2.01].forEach((mult, h) => {       // a bell-like tone: the note and a soft overtone
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = h ? 'sine' : 'triangle';
+      osc.frequency.setValueAtTime(f * mult, t);
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(h ? 0.04 : 0.16, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + (k === 4 ? 1.2 : 0.5));
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 1.3);
+    });
+  });
+  // shimmer: quick high sparkles after the arpeggio
+  for (let k = 0; k < 6; k++) {
+    const t = now + 0.5 + k * 0.06;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(2000 + Math.random() * 1500, t);
+    gain.gain.setValueAtTime(0.05, t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.16);
+  }
 }
 
 // ---------- Song ----------
