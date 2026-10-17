@@ -1,4 +1,4 @@
-const APP_VERSION = '2.4';
+const APP_VERSION = '2.8';
 
 // Each letter is drawn on a 200x200 board. `strokes` are SVG paths, in the
 // order the child writes them; each path runs in the writing direction.
@@ -1466,6 +1466,383 @@ function pickBeats(btn) {
   }, 2600 + b.item.beats * 450);
 }
 
+// ---------- Spell the picture ----------
+
+// A picture is shown and its word spoken; its letters lie shuffled below a row of empty boxes.
+// The child taps them in order (right to left) and each one jumps into the next box, saying
+// its name. Level 1: words of 2-3 letters, level 2: 4-5 letters, all from WORDS.
+let spell = null;
+
+function startSpell(level) {
+  const [min, max] = level === 1 ? [2, 3] : [4, 5];
+  spell = {
+    level, round: 0, used: [], word: null, pos: 0, locked: false,
+    pool: WORDS.flatMap((ws, letter) => ws.map((w, word) => ({ text: w[0], pic: w[1], letter, word })))
+      .filter(w => w.text.length >= min && w.text.length <= max),
+  };
+  $('spell-done').hidden = true;
+  $('spell-play').hidden = false;
+  preload('bravo');
+  nextSpellRound();
+}
+
+function nextSpellRound() {
+  const s = spell;
+  s.word = pickOne(s.pool.filter(w => !s.used.includes(w.text)));
+  s.used.push(s.word.text);
+  s.pos = 0;
+  s.locked = false;
+  const chars = [...s.word.text];
+
+  renderDots('spell-dots', s.round, NUM_ROUNDS);
+  $('spell-pic').textContent = s.word.pic;
+  $('spell-pic').setAttribute('aria-label', `להשמיע: ${s.word.text}`);
+  $('spell-slots').innerHTML = chars.map(() => '<i></i>').join('');
+  // Shuffle until the letters are out of order, so the word isn't already spelled.
+  let order;
+  do { order = shuffle(chars.map((_, k) => k)); } while (chars.length > 1 && order.every((k, i) => chars[k] === chars[i]));
+  $('spell-tiles').innerHTML = order.map(k =>
+    `<button class="namecard spell-tile" type="button">${chars[k]}</button>`).join('');
+
+  preload(wordAudio(s.word.letter, s.word.word));
+  chars.forEach(c => { const g = glyphFor(c); if (g) preload(g.audio); });
+  setTimeout(() => { if (spell === s && !s.locked) saySpellWord(); }, 400);
+}
+
+function saySpellWord() {
+  if (spell) play(wordAudio(spell.word.letter, spell.word.word), spell.word.text);
+}
+
+function pickSpell(btn) {
+  const s = spell;
+  if (!s || s.locked || btn.classList.contains('used')) return;
+  const chars = [...s.word.text];
+
+  if (btn.textContent !== chars[s.pos]) {
+    boop();
+    restartAnimation(btn, 'shake');
+    return;
+  }
+
+  btn.classList.add('used');
+  const slot = $('spell-slots').children[s.pos];
+  slot.textContent = chars[s.pos];
+  slot.classList.add('filled');
+  const g = glyphFor(chars[s.pos]);
+  if (g) play(g.audio, g.letter.name);
+  s.pos++;
+  if (s.pos < chars.length) return;
+
+  // The whole word: cheer, then say it.
+  s.locked = true;
+  s.round++;
+  renderDots('spell-dots', s.round, NUM_ROUNDS);
+  $('spell-slots').classList.add('cheer');
+  setTimeout(() => { if (spell === s) { ding(); saySpellWord(); } }, 700);
+  setTimeout(() => {
+    $('spell-slots').classList.remove('cheer');
+    if (spell !== s) return;
+    if (s.round >= NUM_ROUNDS) finishGame('spell');
+    else nextSpellRound();
+  }, 2600);
+}
+
+// ---------- Find the hidden letters ----------
+
+// A black-and-white colouring-page scene (a park or a beach) with letters scattered through it.
+// One letter is hidden several times; the boxes above the picture show how many. Each one the
+// child finds turns colour and says its name; when all are found the whole scene is coloured in.
+// Tapping a different letter is a mistake: it shakes, with a boop().
+
+// Line drawings on a 100 x 100 box, standing on y = 100. Shapes with class "s" are filled with
+// their --fill colour when the scene is coloured in.
+const ART = {
+  tree: '<path class="s" style="--fill:#cdeccf" d="M50,8 C80,8 94,32 82,50 C96,64 80,84 60,76 C54,88 40,88 36,76 C18,84 4,62 18,50 C6,32 22,8 50,8 Z"/><path class="s" style="--fill:#e0b98a" d="M44,78 L41,100 H59 L56,78"/>',
+  house: '<path class="s" style="--fill:#ffd6c9" d="M20,48 V100 H80 V48"/><path class="s" style="--fill:#f4978e" d="M10,50 L50,14 L90,50 Z"/><path class="s" style="--fill:#fff3b0" d="M42,100 V74 H58 V100"/><rect class="s" style="--fill:#cfe8ff" x="26" y="58" width="12" height="12"/><rect class="s" style="--fill:#cfe8ff" x="62" y="58" width="12" height="12"/><path class="s" style="--fill:#f4978e" d="M66,30 V16 H76 V39"/>',
+  sun: '<circle class="s" style="--fill:#ffe066" cx="50" cy="50" r="18"/><path d="M50,22 V8 M50,78 V92 M22,50 H8 M78,50 H92 M30,30 L20,20 M70,70 L80,80 M30,70 L20,80 M70,30 L80,20"/>',
+  cloud: '<path class="s" style="--fill:#f1f8ff" d="M22,72 a15,15 0 0,1 4,-29 a19,19 0 0,1 36,-6 a16,16 0 0,1 18,35 Z"/>',
+  bird: '<path d="M28,50 q11,-12 22,0 q11,-12 22,0"/>',
+  flower: '<circle class="s" style="--fill:#ffc8dd" cx="50" cy="28" r="10"/><circle class="s" style="--fill:#ffc8dd" cx="36" cy="40" r="10"/><circle class="s" style="--fill:#ffc8dd" cx="64" cy="40" r="10"/><circle class="s" style="--fill:#ffc8dd" cx="42" cy="56" r="10"/><circle class="s" style="--fill:#ffc8dd" cx="58" cy="56" r="10"/><circle class="s" style="--fill:#ffe066" cx="50" cy="44" r="8"/><path d="M50,66 V100 M50,86 q-12,-4 -16,-14"/>',
+  mushroom: '<path class="s" style="--fill:#ff8fa3" d="M14,62 Q50,14 86,62 Z"/><path class="s" style="--fill:#fff1e6" d="M38,62 V100 H62 V62"/><circle cx="36" cy="46" r="4"/><circle cx="60" cy="38" r="5"/>',
+  butterfly: '<path class="s" style="--fill:#e2c6ff" d="M50,42 C30,14 10,32 22,48 C10,62 30,78 50,58 C70,78 90,62 78,48 C90,32 70,14 50,42 Z"/><path d="M50,32 V76 M44,24 l6,8 l6,-8"/>',
+  cat: '<circle class="s" style="--fill:#ffe5a0" cx="50" cy="60" r="28"/><path class="s" style="--fill:#ffe5a0" d="M28,44 L24,20 L44,34 Z M72,44 L76,20 L56,34 Z"/><circle cx="40" cy="56" r="3"/><circle cx="60" cy="56" r="3"/><path d="M44,68 q6,6 12,0 M22,64 H6 M24,70 L8,76 M78,64 H94 M76,70 L92,76"/>',
+  ball: '<circle class="s" style="--fill:#a0c4ff" cx="50" cy="70" r="28"/><path d="M22,70 q28,-18 56,0 M50,42 q-14,28 0,56"/>',
+  fish: '<path class="s" style="--fill:#ffd6a5" d="M16,50 Q42,24 70,50 Q42,76 16,50 Z"/><path class="s" style="--fill:#ffd6a5" d="M70,50 L88,36 V64 Z"/><circle cx="30" cy="46" r="3"/>',
+  grass: '<path d="M30,100 L35,82 L40,100 L46,76 L52,100 L58,84 L63,100 L68,88 L72,100"/>',
+  boat: '<path class="s" style="--fill:#ffb4a2" d="M14,72 H86 L74,90 H26 Z"/><path class="s" style="--fill:#ffffff" d="M50,12 V68 H24 Z"/><path class="s" style="--fill:#ffe066" d="M54,22 V68 H76 Z"/>',
+  umbrella: '<path class="s" style="--fill:#ff8fa3" d="M10,44 Q50,4 90,44 Q80,36 70,44 Q60,36 50,44 Q40,36 30,44 Q20,36 10,44 Z"/><path d="M50,44 V100"/>',
+  bucket: '<path class="s" style="--fill:#a0c4ff" d="M28,52 H72 L66,100 H34 Z"/><path d="M28,52 Q50,24 72,52"/>',
+  starfish: '<path class="s" style="--fill:#ffb347" d="M50,40 L58,62 L82,62 L62,76 L70,98 L50,84 L30,98 L38,76 L18,62 L42,62 Z"/>',
+  shell: '<path class="s" style="--fill:#ffd6e0" d="M50,98 C18,98 14,58 50,48 C86,58 82,98 50,98 Z"/><path d="M50,98 L38,54 M50,98 L50,48 M50,98 L62,54"/>',
+  crab: '<ellipse class="s" style="--fill:#ff8c69" cx="50" cy="76" rx="24" ry="16"/><path d="M28,80 L14,90 M28,74 L12,76 M72,80 L86,90 M72,74 L88,76 M38,64 L30,48 M62,64 L70,48"/><circle class="s" style="--fill:#ff8c69" cx="28" cy="44" r="7"/><circle class="s" style="--fill:#ff8c69" cx="72" cy="44" r="7"/><circle cx="44" cy="70" r="2"/><circle cx="56" cy="70" r="2"/>',
+  palm: '<path class="s" style="--fill:#e0b98a" d="M46,100 Q44,60 52,30 L58,30 Q52,60 56,100 Z"/><path class="s" style="--fill:#b9fbc0" d="M55,30 Q30,8 8,26 Q32,18 55,30 Z M55,30 Q80,6 98,24 Q76,18 55,30 Z M55,30 Q38,34 24,58 Q44,40 55,30 Z M55,30 Q72,38 84,60 Q66,40 55,30 Z"/>',
+};
+
+const SCENE_W = 900, SCENE_H = 560;
+const HIDDEN_LEVELS = {
+  1: { targets: 3, decoys: 5, size: 66 },
+  2: { targets: 5, decoys: 12, size: 52 },
+};
+
+const rand = (a, b) => a + Math.random() * (b - a);
+
+// Places a drawing so that its bottom centre stands at (x, y).
+function art(name, x, y, scale, turn = 0) {
+  return `<g transform="translate(${(x - 50 * scale).toFixed(0)} ${(y - 100 * scale).toFixed(0)}) rotate(${turn} ${50 * scale} ${100 * scale}) scale(${scale.toFixed(2)})">${ART[name]}</g>`;
+}
+
+// A wavy line from x0 to x1 at height y.
+function wave(x0, x1, y, step = 30, h = 8) {
+  let d = `M${x0},${y}`;
+  for (let x = x0; x < x1; x += step) d += ` q${step / 2},${-h} ${step},0`;
+  return `<path d="${d}"/>`;
+}
+
+// The park: sky, hills, trees and a house, a pond with fish, flowers and grass.
+function parkScene() {
+  const p = [];
+  const pondX = rand(220, 680), pondY = rand(440, 480);
+  const inPond = (x, y) => ((x - pondX) / 150) ** 2 + ((y - pondY) / 70) ** 2 < 1;
+  p.push('<rect class="s" style="--fill:#e3f5ff" width="900" height="560"/>');
+  p.push('<path class="s" style="--fill:#e2f4d6" d="M0,250 Q150,190 300,240 T600,230 T900,245 V560 H0 Z"/>');
+  const sunLeft = Math.random() < 0.5;
+  p.push(art('sun', sunLeft ? 90 : 810, 150, 1.3));
+  for (let k = 0; k < 3; k++) p.push(art('cloud', rand(200, 700) + (k - 1) * 120, rand(90, 140), rand(0.9, 1.3)));
+  for (let k = 0; k < 4; k++) p.push(art('bird', rand(180, 720), rand(70, 190), rand(0.5, 0.8)));
+  shuffle([120, 300, 640, 790]).slice(0, 3).forEach(x => p.push(art('tree', x + rand(-30, 30), rand(250, 270), rand(1.6, 2))));
+  p.push(art('house', rand(400, 520), 262, 1.5));
+  p.push(`<ellipse class="s" style="--fill:#bde0fe" cx="${pondX.toFixed(0)}" cy="${pondY.toFixed(0)}" rx="150" ry="70"/>`);
+  p.push(wave(pondX - 90, pondX + 60, pondY - 18, 24, 6), wave(pondX - 40, pondX + 90, pondY + 26, 24, 6));
+  p.push(art('fish', pondX - 60, pondY + 20, 0.55), art('fish', pondX + 50, pondY + 5, 0.5, 10));
+  const spot = () => { let x, y; do { x = rand(30, 870); y = rand(300, 550); } while (inPond(x, y)); return [x, y]; };
+  ['flower', 'flower', 'flower', 'flower', 'mushroom', 'mushroom', 'cat', 'ball', 'butterfly', 'butterfly'].forEach(name => {
+    const [x, y] = spot();
+    p.push(art(name, x, y, name === 'cat' ? 1.1 : rand(0.6, 0.85), name === 'butterfly' ? Math.round(rand(-20, 20)) : 0));
+  });
+  for (let k = 0; k < 34; k++) { const [x, y] = spot(); p.push(art('grass', x, y, rand(0.35, 0.6))); }
+  return p.join('');
+}
+
+// The beach: sky, the sea with boats and fish, the sand with an umbrella, a bucket and shells.
+function beachScene() {
+  const p = [];
+  p.push('<rect class="s" style="--fill:#e3f5ff" width="900" height="560"/>');
+  let sea = 'M0,215';
+  for (let x = 0; x < 900; x += 50) sea += ' q25,-12 50,0';
+  p.push(`<path class="s" style="--fill:#bde0fe" d="${sea} V420 H0 Z"/>`);
+  p.push('<path class="s" style="--fill:#ffe8b0" d="M0,410 Q220,385 450,405 T900,400 V560 H0 Z"/>');
+  const sunLeft = Math.random() < 0.5;
+  p.push(art('sun', sunLeft ? 90 : 810, 150, 1.2));
+  for (let k = 0; k < 3; k++) p.push(art('cloud', rand(200, 700) + (k - 1) * 120, rand(80, 130), rand(0.8, 1.2)));
+  for (let k = 0; k < 4; k++) p.push(art('bird', rand(180, 720), rand(60, 170), rand(0.5, 0.8)));
+  p.push(art('boat', rand(150, 380), 235, 1.2), art('boat', rand(520, 760), 228, 0.9));
+  for (let k = 0; k < 7; k++) { const x = rand(20, 760); p.push(wave(x, x + rand(80, 160), rand(260, 395), 22, 5)); }   // little waves
+  for (let k = 0; k < 5; k++) p.push(art('fish', rand(60, 840), rand(300, 400), rand(0.45, 0.65), Math.round(rand(-15, 15))));
+  p.push(art('palm', Math.random() < 0.5 ? 60 : 840, 470, 2.1));
+  ['umbrella', 'bucket', 'starfish', 'starfish', 'shell', 'shell', 'crab', 'ball'].forEach(name =>
+    p.push(art(name, rand(120, 780), rand(450, 550), name === 'umbrella' ? 1.5 : rand(0.55, 0.8), Math.round(rand(-10, 10)))));
+  for (let k = 0; k < 40; k++) p.push(`<circle cx="${rand(0, 900).toFixed(0)}" cy="${rand(420, 556).toFixed(0)}" r="1.6"/>`);
+  return p.join('');
+}
+
+let hidden = null;
+
+function startHidden(level) {
+  hidden = { level, round: 0, used: [], letter: -1, found: 0, total: 0, locked: false, hint: 0, lastScene: -1 };
+  $('hidden-done').hidden = true;
+  $('hidden-play').hidden = false;
+  preload('bravo');
+  nextHiddenRound();
+}
+
+function nextHiddenRound() {
+  const h = hidden;
+  const cfg = HIDDEN_LEVELS[h.level];
+  const all = LETTERS.map((_, i) => i);
+  h.letter = pickOne(all.filter(i => !h.used.includes(i)));
+  h.used.push(h.letter);
+  h.found = 0;
+  h.total = cfg.targets;
+  h.locked = false;
+  h.lastScene = h.lastScene === 0 ? 1 : 0;
+  const ch = LETTERS[h.letter].ch;
+
+  // Other letters to confuse: never ones too close to the target in this font.
+  const banned = TOO_ALIKE.filter(pair => pair.includes(ch)).join('');
+  const others = all.filter(i => i !== h.letter && !banned.includes(LETTERS[i].ch));
+  const letters = [...Array(cfg.targets).fill(h.letter), ...Array.from({ length: cfg.decoys }, () => pickOne(others))];
+
+  // Spread the letters out: each keeps a letter's width away from the others.
+  const spots = [];
+  letters.forEach(() => {
+    let x, y, tries = 0;
+    do { x = rand(50, SCENE_W - 50); y = rand(50, SCENE_H - 45); tries++; }
+    while (tries < 200 && spots.some(([a, b]) => Math.hypot(a - x, b - y) < cfg.size * 1.5));
+    spots.push([x, y]);
+  });
+  const marks = letters.map((i, k) => {
+    const [x, y] = spots[k];
+    const size = cfg.size * rand(0.8, 1.15);
+    return `<g class="hidden-letter ${i === h.letter ? 'target' : 'decoy'}" transform="translate(${x.toFixed(0)} ${y.toFixed(0)}) rotate(${Math.round(rand(-30, 30))})">` +
+      `<circle class="hidden-hit" r="${(size * 0.62).toFixed(0)}"/>` +
+      `<text font-size="${size.toFixed(0)}" text-anchor="middle" dominant-baseline="central">${LETTERS[i].ch}</text></g>`;
+  });
+
+  renderDots('hidden-dots', h.round, NUM_ROUNDS);
+  $('hidden-target').textContent = ch;
+  $('hidden-boxes').innerHTML = Array(cfg.targets).fill('<i></i>').join('');
+  $('hidden-scene').innerHTML =
+    `<svg viewBox="0 0 ${SCENE_W} ${SCENE_H}" class="hidden-svg" role="img" aria-label="תמונה שמסתתרות בה אותיות">` +
+    `<g class="hidden-drawing">${h.lastScene === 0 ? parkScene() : beachScene()}</g>${marks.join('')}</svg>`;
+  preload(letterAudio(h.letter));
+  armHiddenHint();
+}
+
+// If the child is stuck for a while, one of the letters still hidden starts to glow.
+function armHiddenHint() {
+  const h = hidden;
+  clearTimeout(h.hint);
+  h.hint = setTimeout(() => {
+    if (hidden === h && !h.locked) document.querySelector('#hidden-scene .target:not(.found)')?.classList.add('hint');
+  }, 25000);
+}
+
+function pickHidden(g) {
+  const h = hidden;
+  if (!h || h.locked || !g || g.classList.contains('found')) return;
+
+  if (!g.classList.contains('target')) {
+    boop();
+    restartAnimation(g.querySelector('text'), 'shake');
+    return;
+  }
+
+  // One more found: colour it, tick a box, say the letter.
+  g.classList.remove('hint');
+  g.classList.add('found');
+  const box = $('hidden-boxes').children[h.found];
+  box.textContent = LETTERS[h.letter].ch;
+  box.classList.add('on');
+  h.found++;
+  ding();
+  play(letterAudio(h.letter), LETTERS[h.letter].name);
+  armHiddenHint();
+  if (h.found < h.total) return;
+
+  // All found: the whole picture is coloured in.
+  h.locked = true;
+  h.round++;
+  clearTimeout(h.hint);
+  $('hidden-scene').querySelector('svg').classList.add('colored');
+  renderDots('hidden-dots', h.round, NUM_ROUNDS);
+  setTimeout(() => {
+    if (hidden !== h) return;
+    if (h.round >= NUM_ROUNDS) finishGame('hidden');
+    else nextHiddenRound();
+  }, 3000);
+}
+
+// ---------- Rhymes ----------
+
+// A picture is shown and its word spoken; the child picks, from three more pictures, the one
+// whose word rhymes with it. The children can't read, so every answer is a picture: each card
+// says its word from its own 🔊, and tapping the card chooses it.
+// RHYME_GROUPS are rhyme families, every member a picture [emoji, word]. The sound of the
+// n-th picture overall (counting through the families in order) is audio/rhymes/<nn>.m4a.
+const RHYME_GROUPS = [
+  [['🎈', 'בלון'], ['🍋', 'לימון'], ['⏰', 'שעון'], ['☎️', 'טלפון'], ['🏰', 'ארמון'], ['🧼', 'סבון'], ['🥒', 'מלפפון'], ['✏️', 'עיפרון']],
+  [['🚲', 'אופניים'], ['✂️', 'מספריים'], ['🧦', 'גרביים'], ['👓', 'משקפיים'], ['👀', 'עיניים'], ['👖', 'מכנסיים']],
+  [['🌙', 'ירח'], ['🌸', 'פרח'], ['🍎', 'תפוח'], ['🔑', 'מפתח'], ['🍉', 'אבטיח'], ['🧊', 'קרח']],
+  [['🥚', 'ביצה'], ['🍕', 'פיצה']],
+  [['🐜', 'נמלה'], ['👗', 'שמלה']],
+  [['🐔', 'תרנגולת'], ['🚪', 'דלת']],
+  [['📕', 'ספר'], ['🐆', 'נמר'], ['🕯️', 'נר']],
+  [['🐢', 'צב'], ['🐰', 'ארנב'], ['⭐', 'כוכב']],
+  [['🐵', 'קוף'], ['🥁', 'תוף']],
+  [['🐶', 'כלב'], ['❤️', 'לב']],
+  [['🦵', 'רגל'], ['🚩', 'דגל']],
+  [['☀️', 'שמש'], ['5️⃣', 'חמש']],
+  [['👃', 'אף'], ['🥄', 'כף']],
+  [['🐴', 'סוס'], ['🚌', 'אוטובוס']],
+  [['🧀', 'גבינה'], ['🚢', 'ספינה']],
+];
+const RHYME_ITEMS = RHYME_GROUPS.flatMap((members, group) => members.map(([pic, word]) => ({ pic, word, group })));
+RHYME_ITEMS.forEach((item, n) => { item.audio = `rhymes/${String(n + 1).padStart(2, '0')}`; });
+
+let rhyme = null;
+
+function startRhyme() {
+  rhyme = { round: 0, used: [], item: null, answer: null, locked: false };
+  $('rhyme-done').hidden = true;
+  $('rhyme-play').hidden = false;
+  preload('bravo');
+  nextRhymeRound();
+}
+
+function nextRhymeRound() {
+  const r = rhyme;
+  // A picture from a family not used yet in this game, and another member of its family.
+  r.item = pickOne(RHYME_ITEMS.filter(it => !r.used.includes(it.group)));
+  r.used.push(r.item.group);
+  r.answer = pickOne(RHYME_ITEMS.filter(it => it.group === r.item.group && it !== r.item));
+  r.locked = false;
+
+  // Two wrong pictures, each from a different other family, so nothing else rhymes.
+  const others = shuffle(RHYME_GROUPS.map((_, g) => g).filter(g => g !== r.item.group)).slice(0, 2);
+  const choices = shuffle([r.answer, ...others.map(g => pickOne(RHYME_ITEMS.filter(it => it.group === g)))]);
+
+  renderDots('rhyme-dots', r.round, NUM_ROUNDS);
+  $('rhyme-pic').textContent = r.item.pic;
+  $('rhyme-pic').setAttribute('aria-label', `להשמיע: ${r.item.word}`);
+  $('rhyme-cards').innerHTML = choices.map(it => {
+    const n = RHYME_ITEMS.indexOf(it);
+    return `<div class="rhyme-card" data-n="${n}">` +
+      `<button class="rhyme-pick" type="button" data-n="${n}" aria-label="${it.word}">${it.pic}</button>` +
+      `<button class="rhyme-say" type="button" data-say="${n}" aria-label="להשמיע: ${it.word}">🔊</button></div>`;
+  }).join('');
+
+  [r.item, ...choices].forEach(it => preload(it.audio));
+  setTimeout(() => { if (rhyme === r && !r.locked) sayRhymeWord(); }, 400);
+}
+
+function sayRhymeWord() {
+  if (rhyme) play(rhyme.item.audio, rhyme.item.word);
+}
+
+function sayRhymeItem(n) {
+  const it = RHYME_ITEMS[n];
+  play(it.audio, it.word);
+}
+
+function pickRhyme(btn) {
+  const r = rhyme;
+  const card = btn.closest('.rhyme-card');
+  if (!r || r.locked || card.classList.contains('off')) return;
+
+  if (RHYME_ITEMS[+btn.dataset.n] !== r.answer) {
+    boop();
+    restartAnimation(card, 'shake');
+    card.classList.add('off');
+    setTimeout(() => { if (rhyme === r && !r.locked) sayRhymeWord(); }, 700);
+    return;
+  }
+
+  // Right: say the pair, the picture's word and then its rhyme.
+  r.locked = true;
+  r.round++;
+  card.classList.add('right');
+  $('rhyme-cards').querySelectorAll('.rhyme-card:not(.right)').forEach(c => c.classList.add('off'));
+  ding();
+  renderDots('rhyme-dots', r.round, NUM_ROUNDS);
+  setTimeout(() => { if (rhyme === r) sayRhymeWord(); }, 400);
+  setTimeout(() => { if (rhyme === r) play(r.answer.audio, r.answer.word); }, 1300);
+  setTimeout(() => {
+    if (rhyme !== r) return;
+    if (r.round >= NUM_ROUNDS) finishGame('rhyme');
+    else nextRhymeRound();
+  }, 2900);
+}
+
 // ---------- Letter road ----------
 
 // The car drives through the letters in alphabet order (no final letters). At each stop three
@@ -2273,6 +2650,10 @@ function route() {
   const numOrder = hash.match(/^numorder-(10|20)$/);
   beats = null;
   road = null;
+  rhyme = null;
+  spell = null;
+  if (hidden) clearTimeout(hidden.hint);
+  hidden = null;
   train = null;
   monkey = null;
   fish = null;
@@ -2280,7 +2661,20 @@ function route() {
   frog = null;
   feed = null;
   lift = null;
-  if (hash === 'train' || hash === 'numtrain') {
+  const spellLevel = hash.match(/^spell-([12])$/);
+  const hiddenLevel = hash.match(/^hidden-([12])$/);
+  if (spellLevel) {
+    show('spell-game');
+    startSpell(+spellLevel[1]);
+  } else if (hiddenLevel) {
+    show('hidden-game');
+    startHidden(+hiddenLevel[1]);
+  } else if (hash === 'spell' || hash === 'hidden') {
+    show(hash);
+  } else if (hash === 'rhyme') {
+    show('rhyme');
+    startRhyme();
+  } else if (hash === 'train' || hash === 'numtrain') {
     show('train-game');
     startTrain(hash === 'train'
       ? { items: LETTER_ITEMS, run: 4, ltr: false, title: 'רכבת האותיות', hint: 'לוחצים על האותיות לפי הסדר כדי למלא את הקרונות' }
@@ -2528,6 +2922,22 @@ $('lift-panel').addEventListener('click', e => {
   const btn = e.target.closest('.lift-btn');
   if (btn) pickLift(btn);
 });
+$('rhyme-again').addEventListener('click', startRhyme);
+$('rhyme-pic').addEventListener('click', sayRhymeWord);
+$('rhyme-cards').addEventListener('click', e => {
+  const say = e.target.closest('.rhyme-say');
+  if (say) { sayRhymeItem(+say.dataset.say); return; }
+  const pick = e.target.closest('.rhyme-pick');
+  if (pick) pickRhyme(pick);
+});
+$('spell-again').addEventListener('click', () => { if (spell) startSpell(spell.level); });
+$('spell-pic').addEventListener('click', saySpellWord);
+$('spell-tiles').addEventListener('click', e => {
+  const btn = e.target.closest('.spell-tile');
+  if (btn) pickSpell(btn);
+});
+$('hidden-again').addEventListener('click', () => { if (hidden) startHidden(hidden.level); });
+$('hidden-scene').addEventListener('click', e => pickHidden(e.target.closest('.hidden-letter')));
 $('song-btn').addEventListener('click', toggleSong);
 $('speak-btn').addEventListener('click', () => {
   if (trace) play(trace.audio, trace.letter.name);

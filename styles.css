@@ -156,6 +156,11 @@ body::before {
   /* seven exercises: rows of four and three, rather than three, three and one */
   .menu-grid.menu-cols-4 { --cols: 4; }
   .menu-grid.menu-cols-4 .menu-title { font-size: clamp(1.2rem, 2.5vw, 1.7rem); }
+  /* thirteen exercises: rows of five, five and three */
+  .menu-grid.menu-cols-5 { --cols: 5; --gap: 14px; }
+  .menu-grid.menu-cols-5 .menu-card { min-height: clamp(118px, 20dvh, 180px); padding: 14px 8px; }
+  .menu-grid.menu-cols-5 .menu-icon { font-size: clamp(2.4rem, 6vw, 3.6rem); }
+  .menu-grid.menu-cols-5 .menu-title { font-size: clamp(1rem, 2.1vw, 1.45rem); }
 }
 
 .menu-icon-text { font-size: clamp(3.2rem, 10vw, 4.6rem); letter-spacing: 0.06em; }
@@ -1512,6 +1517,114 @@ button.block.shake { animation: shake 0.4s ease; }
 #home .menu-card:focus-visible .menu-icon, #home .menu-card:focus-visible .sparkle { animation-play-state: running; }
 @keyframes tile-float { 50% { translate: 0 -8px; } }
 @keyframes twinkle { 50% { opacity: 0.2; scale: 0.6; } }
+
+/* ---------- Rhymes ---------- */
+
+.rhyme-cards { display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(10px, 3vw, 26px); }
+.rhyme-card { position: relative; transition: opacity 0.2s ease; }
+.rhyme-pick {
+  width: clamp(110px, 22vw, 190px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 6px solid var(--frame, var(--blue));
+  border-radius: 26px;
+  background: var(--white);
+  font: inherit;
+  font-size: clamp(56px, 12vw, 104px);
+  line-height: 1;
+  box-shadow: 0 7px 0 rgba(43, 45, 91, 0.2);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.rhyme-card:nth-child(1) { --frame: var(--coral); }
+.rhyme-card:nth-child(2) { --frame: var(--blue); }
+.rhyme-card:nth-child(3) { --frame: #f5b400; }
+.rhyme-pick:active { translate: 0 4px; box-shadow: 0 3px 0 rgba(43, 45, 91, 0.2); }
+.rhyme-pick:focus-visible, .rhyme-say:focus-visible { outline: 4px solid var(--navy); outline-offset: 3px; }
+/* the card's own speaker, in its bottom corner */
+.rhyme-say {
+  position: absolute;
+  left: 8px;
+  bottom: 14px;
+  width: clamp(40px, 6.6vw, 56px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 3px solid var(--white);
+  border-radius: 50%;
+  background: var(--yellow);
+  font-size: clamp(1.1rem, 3vw, 1.6rem);
+  line-height: 1;
+  box-shadow: 0 3px 0 var(--yellow-dark);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.rhyme-card.shake { animation: shake 0.4s ease; }
+.rhyme-card.off { opacity: 0.35; }
+.rhyme-card.off .rhyme-pick { cursor: default; }
+.rhyme-card.right .rhyme-pick { --frame: var(--green); background: #e6f8ee; transform: scale(1.08); }
+
+/* ---------- Spell the picture ---------- */
+
+.spell-slots { display: flex; justify-content: center; gap: clamp(6px, 1.6vw, 14px); }
+.spell-slots i {
+  width: clamp(54px, 11vw, 96px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: 4px dashed #c3c6dd;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--navy);
+  font-style: normal;
+  font-size: clamp(1.8rem, 6vw, 3.4rem);
+  line-height: 1;
+}
+.spell-slots i.filled { border-style: solid; border-color: var(--green); background: #e6f8ee; animation: pop 0.3s ease; }
+.spell-slots.cheer i { animation: hop 0.5s ease; }
+.spell-slots.cheer i:nth-child(2) { animation-delay: 0.1s; }
+.spell-slots.cheer i:nth-child(3) { animation-delay: 0.2s; }
+.spell-slots.cheer i:nth-child(4) { animation-delay: 0.3s; }
+.spell-slots.cheer i:nth-child(5) { animation-delay: 0.4s; }
+#spell-game .spell-tile { width: clamp(58px, 12vw, 104px); font-size: clamp(1.8rem, 6vw, 3.4rem); }
+.spell-tile.used { visibility: hidden; }
+.spell-tile.shake { animation: shake 0.4s ease; }
+
+/* ---------- Find the hidden letters ---------- */
+
+.hidden-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.hidden-target { display: flex; align-items: center; gap: 12px; }
+.hidden-target b { min-width: 1.4em; padding: 0 0.2em; border: 4px solid var(--coral); border-radius: 14px; background: var(--white); color: var(--coral); font-weight: 400; font-size: clamp(1.9rem, 5.6vw, 3rem); line-height: 1.15; text-align: center; }
+.hidden-boxes { display: flex; gap: 6px; }
+.hidden-boxes i { width: clamp(34px, 6vw, 48px); aspect-ratio: 1; display: grid; place-items: center; border: 3px solid var(--navy); border-radius: 8px; background: var(--white); color: var(--white); font-style: normal; font-size: clamp(1.2rem, 3.6vw, 1.9rem); line-height: 1; }
+.hidden-boxes i.on { background: var(--green); border-color: var(--green-dark); animation: pop 0.3s ease; }
+.hidden-scene { flex: 1; min-height: 0; width: 100%; display: flex; justify-content: center; }
+.hidden-svg {
+  max-width: 100%;
+  max-height: 100%;
+  aspect-ratio: 900 / 560;
+  background: var(--white);
+  border: 5px solid var(--navy);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 0 rgba(43, 45, 91, 0.15);
+  touch-action: manipulation;
+}
+/* black outlines on white, like a colouring page */
+.hidden-drawing { fill: none; stroke: #2b2d5b; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.hidden-drawing circle:not(.s) { fill: #2b2d5b; stroke: none; }
+.hidden-drawing .s { fill: #ffffff; transition: fill 0.8s ease; }
+.hidden-svg.colored .hidden-drawing .s { fill: var(--fill); }
+.hidden-letter { cursor: pointer; }
+.hidden-letter text { font-family: 'Varela Round', sans-serif; fill: #2b2d5b; stroke: #ffffff; stroke-width: 3; paint-order: stroke; transform-box: fill-box; transform-origin: center; }
+.hidden-letter .hidden-hit { fill: transparent; stroke: none; }
+.hidden-letter text.shake { animation: shake 0.4s ease; }
+.hidden-letter.found text { fill: var(--coral); animation: pop 0.45s ease; }
+.hidden-letter.found .hidden-hit { fill: rgba(255, 210, 63, 0.55); stroke: var(--yellow-dark); stroke-width: 2; }
+.hidden-letter.hint text { animation: hint-glow 1.6s ease-in-out infinite; }
+@keyframes hint-glow { 50% { fill: var(--coral); } }
 
 /* ---------- Confetti ---------- */
 

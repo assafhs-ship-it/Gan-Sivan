@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
   <!-- the site title only: a child's-handwriting font, loaded just for its letters -->
   <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@800&text=%D7%94%D7%92%D7%9F%20%D7%A9%D7%9C%20%D7%A1%D7%99%D7%95%D7%9F&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=2.4">
+  <link rel="stylesheet" href="styles.css?v=2.8">
 </head>
 <body>
 
@@ -80,7 +80,7 @@
       <h2>אותיות</h2>
       <span class="topbar-spacer"></span>
     </div>
-    <nav class="menu menu-grid menu-cols-4" aria-label="תרגילי אותיות">
+    <nav class="menu menu-grid menu-cols-5" aria-label="תרגילי אותיות">
       <a class="menu-card" href="#letters">
         <span class="menu-icon" aria-hidden="true">✏️</span>
         <span class="menu-title">כתיבת אותיות</span>
@@ -120,6 +120,18 @@
       <a class="menu-card menu-purple" href="#beats">
         <span class="menu-icon" aria-hidden="true">🗣️</span>
         <span class="menu-title">כמה צלילים?</span>
+      </a>
+      <a class="menu-card menu-teal" href="#rhyme">
+        <span class="menu-icon" aria-hidden="true">🎶</span>
+        <span class="menu-title">חרוזים</span>
+      </a>
+      <a class="menu-card menu-orange" href="#spell">
+        <span class="menu-icon" aria-hidden="true">🔤</span>
+        <span class="menu-title">בונים מילה</span>
+      </a>
+      <a class="menu-card menu-navy" href="#hidden">
+        <span class="menu-icon" aria-hidden="true">🕵️</span>
+        <span class="menu-title">האות המסתתרת</span>
       </a>
     </nav>
   </section>
@@ -797,6 +809,115 @@
     </div>
   </section>
 
+  <!-- Spell the picture / find the hidden letter -->
+  <section id="spell" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#abc" aria-label="חזרה לאותיות">✖</a>
+      <h2>בונים מילה</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <p class="hint">מילים קצרות או ארוכות?</p>
+    <div class="level-menu">
+      <a class="level-card" href="#spell-1" aria-label="מילים קצרות">
+        <span class="level-num">🐶</span>
+        <span class="level-demo" aria-hidden="true"><i>כ</i><i>ל</i><i>ב</i></span>
+      </a>
+      <a class="level-card" href="#spell-2" aria-label="מילים ארוכות">
+        <span class="level-num">🎈</span>
+        <span class="level-demo" aria-hidden="true"><i>ב</i><i>ל</i><i>ו</i><i>ן</i></span>
+      </a>
+    </div>
+  </section>
+
+  <section id="spell-game" class="screen num-game" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#spell" aria-label="חזרה">✖</a>
+      <h2>בונים מילה</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <div class="dots" id="spell-dots" aria-hidden="true"></div>
+    <p class="game-hint">לוחצים על האותיות לפי הסדר ובונים את שם התמונה</p>
+    <div class="order-play" id="spell-play">
+      <button class="picture-card" id="spell-pic" type="button"></button>
+      <div class="spell-slots" id="spell-slots"></div>
+      <div class="name-cards" id="spell-tiles"></div>
+    </div>
+    <div class="order-done" id="spell-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="spell-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="hidden" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#abc" aria-label="חזרה לאותיות">✖</a>
+      <h2>האות המסתתרת</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <p class="hint">קל או קשה?</p>
+    <div class="level-menu">
+      <a class="level-card" href="#hidden-1" aria-label="קל">
+        <span class="level-num">🙂</span>
+        <span class="level-demo" aria-hidden="true"><i>א</i></span>
+      </a>
+      <a class="level-card" href="#hidden-2" aria-label="קשה">
+        <span class="level-num">🤓</span>
+        <span class="level-demo" aria-hidden="true"><i>א</i><i>ב</i><i>ג</i></span>
+      </a>
+    </div>
+  </section>
+
+  <section id="hidden-game" class="screen game-screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#hidden" aria-label="חזרה">✖</a>
+      <h2>האות המסתתרת</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <div class="dots" id="hidden-dots" aria-hidden="true"></div>
+    <p class="game-hint">האות מסתתרת בתמונה כמה פעמים. מוצאים את כולן ולוחצים עליהן</p>
+    <div class="game-play" id="hidden-play">
+      <div class="hidden-wrap">
+        <div class="hidden-target" aria-label="האות שמחפשים"><b id="hidden-target"></b><span class="hidden-boxes" id="hidden-boxes"></span></div>
+        <div class="hidden-scene" id="hidden-scene"></div>
+      </div>
+    </div>
+    <div class="order-done" id="hidden-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="hidden-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Rhymes -->
+  <section id="rhyme" class="screen num-game" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#abc" aria-label="חזרה לאותיות">✖</a>
+      <h2>חרוזים</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <div class="dots" id="rhyme-dots" aria-hidden="true"></div>
+    <p class="game-hint">איזו תמונה מתחרזת עם התמונה הגדולה? מקשיבים ב־🔊 ובוחרים</p>
+    <div class="order-play" id="rhyme-play">
+      <button class="picture-card" id="rhyme-pic" type="button"></button>
+      <div class="rhyme-cards" id="rhyme-cards"></div>
+    </div>
+    <div class="order-done" id="rhyme-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="rhyme-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
   <!-- How many sounds in a word -->
   <section id="beats" class="screen num-game" hidden>
     <div class="topbar">
@@ -1017,6 +1138,6 @@
     <div id="all-grid" class="all-grid"></div>
   </section>
 
-  <script src="script.js?v=2.4"></script>
+  <script src="script.js?v=2.8"></script>
 </body>
 </html>
