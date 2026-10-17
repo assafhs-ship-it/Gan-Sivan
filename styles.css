@@ -156,6 +156,11 @@ body::before {
   /* seven exercises: rows of four and three, rather than three, three and one */
   .menu-grid.menu-cols-4 { --cols: 4; }
   .menu-grid.menu-cols-4 .menu-title { font-size: clamp(1.2rem, 2.5vw, 1.7rem); }
+  /* eighteen exercises: three rows of six */
+  .menu-grid.menu-cols-6 { --cols: 6; --gap: 12px; }
+  .menu-grid.menu-cols-6 .menu-card { min-height: clamp(108px, 19dvh, 170px); padding: 12px 6px; }
+  .menu-grid.menu-cols-6 .menu-icon { font-size: clamp(2.2rem, 5vw, 3.2rem); }
+  .menu-grid.menu-cols-6 .menu-title { font-size: clamp(0.95rem, 1.8vw, 1.3rem); }
   /* thirteen exercises: rows of five, five and three */
   .menu-grid.menu-cols-5 { --cols: 5; --gap: 14px; }
   .menu-grid.menu-cols-5 .menu-card { min-height: clamp(118px, 20dvh, 180px); padding: 14px 8px; }
@@ -179,6 +184,12 @@ body::before {
 }
 .topbar h2 { margin: 0; font-size: clamp(1.5rem, 5vw, 2.2rem); font-weight: 400; color: var(--navy); text-align: center; }
 .topbar-spacer { width: 60px; flex: none; }
+/* exercise screens: ✖ and 🏠 on one side, the other side as wide, so the title stays centred */
+.topbar-side { flex: 0 0 132px; display: flex; gap: 12px; }
+.topbar-side-end { justify-content: flex-end; }
+.btn-home { font-size: 1.4rem; }
+.topbar h2 { flex: 1; min-width: 0; }
+@media (max-width: 560px) { .topbar-side { flex-basis: 98px; gap: 6px; } .topbar-side .btn-round { width: 46px; min-height: 46px; font-size: 1.2rem; } .topbar h2 { font-size: 1.3rem; } }
 
 .hint { text-align: center; font-size: 1.4rem; margin: 14px 0 6px; }
 
@@ -1694,6 +1705,37 @@ button.block.shake { animation: shake 0.4s ease; }
 @keyframes fin-star { 0% { transform: scale(4) rotate(-90deg); opacity: 0; } 100% { transform: scale(1) rotate(0); opacity: 1; } }
 @keyframes fin-burst { 0% { opacity: 1; transform: translate(0, 0); } 100% { opacity: 0; transform: translate(var(--x), var(--y)); } }
 @keyframes fin-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+
+/* ---------- Exercise menus (אותיות, מספרים) ---------- */
+
+/* Grouped like an iPad home screen: a small heading per topic, then big rounded app icons with
+   the name in a white label under each. */
+.app-menu { padding: 4px 0 24px; }
+.app-group { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 16px 0 10px; font-weight: 400; font-size: clamp(1.2rem, 3vw, 1.6rem); color: var(--navy); }
+.app-group span { font-size: 1.3em; }
+.app-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(14px, 2.6vw, 26px) clamp(8px, 1.6vw, 22px); }
+.app { --size: clamp(96px, 12vw, 140px); width: calc(var(--size) + 16px); display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--ink); text-decoration: none; touch-action: manipulation; }
+.app-icon {
+  width: var(--size);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: 4px solid rgba(255, 255, 255, 0.85);
+  border-radius: 30%;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.42), transparent 55%), var(--c);
+  font-size: calc(var(--size) * 0.5);
+  line-height: 1;
+  box-shadow: 0 7px 0 rgba(0, 0, 0, 0.16), inset 0 -7px 0 rgba(0, 0, 0, 0.08);
+  transition: transform 0.15s ease;
+}
+.app-icon-text { color: var(--white); font-size: calc(var(--size) * 0.56); }
+.app-name { padding: 4px 10px; border-radius: 999px; background: var(--white); box-shadow: 0 3px 0 rgba(43, 45, 91, 0.1); font-size: clamp(1rem, 2vw, 1.25rem); line-height: 1.25; text-align: center; }
+.app:hover .app-icon { transform: translateY(-4px) scale(1.04); }
+.app:active .app-icon { transform: translateY(4px); box-shadow: 0 3px 0 rgba(0, 0, 0, 0.16); }
+.app:focus-visible { outline: none; }
+.app:focus-visible .app-icon { outline: 4px solid var(--navy); outline-offset: 3px; }
+.c-coral { --c: var(--coral); } .c-blue { --c: var(--blue); } .c-green { --c: var(--green); } .c-purple { --c: var(--purple); }
+.c-yellow { --c: #f5b400; } .c-pink { --c: var(--pink); } .c-teal { --c: #2bb5b0; } .c-orange { --c: #ff9f43; } .c-navy { --c: #4a5bd0; }
 
 /* ---------- Confetti ---------- */
 

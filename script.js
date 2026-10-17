@@ -1,4 +1,4 @@
-const APP_VERSION = '3.5';
+const APP_VERSION = '3.9';
 
 // Each letter is drawn on a 200x200 board. `strokes` are SVG paths, in the
 // order the child writes them; each path runs in the writing direction.
@@ -2071,6 +2071,7 @@ let train = null;
 function startTrain(cfg) {
   train = { cfg, round: 0, lastStart: -1, run: [], pos: 0, locked: true };
   $('train-title').textContent = cfg.title;
+  $('train-back').href = cfg.ltr ? '#numbers' : '#abc';
   $('train-hint').textContent = cfg.hint;
   $('train-scene').dir = $('train-pile').dir = cfg.ltr ? 'ltr' : 'rtl';
   $('train-done').hidden = true;
@@ -2760,6 +2761,25 @@ function show(id) {
   window.scrollTo(0, 0);
 }
 
+// Every exercise screen gets a 🏠 beside its ✖. The two sides of the top bar are made the same
+// width so the title stays centred.
+function addHomeButtons() {
+  document.querySelectorAll('.screen .topbar').forEach(bar => {
+    const first = bar.firstElementChild;
+    if (!first || first.getAttribute('href') === '#') return;          // menus already have 🏠 there
+    const right = document.createElement('div');
+    right.className = 'topbar-side';
+    bar.insertBefore(right, first);
+    right.append(first);
+    right.insertAdjacentHTML('beforeend', '<a class="btn btn-round btn-home" href="#" aria-label="לדף הבית">🏠</a>');
+    const last = bar.lastElementChild;
+    const left = document.createElement('div');
+    left.className = 'topbar-side topbar-side-end';
+    bar.append(left);
+    left.append(last);
+  });
+}
+
 function route() {
   const hash = location.hash.slice(1);
   if (hash && !song.paused) stopSong();
@@ -2920,7 +2940,7 @@ function route() {
   } else if (hash === 'letters') {
     renderGrid();
     show('letters');
-  } else if (hash === 'abc' || hash === 'numbers' || hash === 'games') {
+  } else if (hash === 'abc' || hash === 'numbers') {
     show(hash);
   } else if (hash === 'all') {
     show('all');
@@ -2934,6 +2954,7 @@ function route() {
 
 $('version').textContent = APP_VERSION;
 buildFinishStages();
+addHomeButtons();
 $('erase-btn').addEventListener('click', () => { if (trace) trace.reopen(); });
 $('prev-btn').addEventListener('click', e => { if (trace?.inName) { e.preventDefault(); stepName(-1); } });
 $('next-btn').addEventListener('click', e => { if (trace?.inName) { e.preventDefault(); stepName(1); } });

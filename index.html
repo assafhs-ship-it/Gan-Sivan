@@ -12,11 +12,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
   <!-- the site title only: a child's-handwriting font, loaded just for its letters -->
   <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@800&text=%D7%94%D7%92%D7%9F%20%D7%A9%D7%9C%20%D7%A1%D7%99%D7%95%D7%9F&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=3.5">
+  <link rel="stylesheet" href="styles.css?v=3.9">
 </head>
 <body>
 
-  <!-- Landing page: the three sections -->
+  <!-- Landing page: the two sections -->
   <section id="home" class="screen">
     <!-- The kindergarten's song: tap to play, tap again to stop -->
     <button class="song-btn" id="song-btn" type="button" aria-pressed="false" aria-label="לנגן את השיר של הגן">
@@ -60,11 +60,6 @@
         <span class="menu-icon menu-icon-text" aria-hidden="true" dir="ltr">123</span>
         <span class="menu-title">מספרים</span>
       </a>
-      <a class="menu-card menu-green" href="#games">
-        <span class="sparkle" aria-hidden="true">✨</span><span class="sparkle" aria-hidden="true">⭐</span>
-        <span class="menu-icon menu-icon-text" aria-hidden="true">🎮</span>
-        <span class="menu-title">משחקים</span>
-      </a>
     </nav>
 
     <footer class="version">
@@ -80,60 +75,38 @@
       <h2>אותיות</h2>
       <span class="topbar-spacer"></span>
     </div>
-    <nav class="menu menu-grid menu-cols-5" aria-label="תרגילי אותיות">
-      <a class="menu-card" href="#letters">
-        <span class="menu-icon" aria-hidden="true">✏️</span>
-        <span class="menu-title">כתיבת אותיות</span>
-      </a>
-      <a class="menu-card menu-blue" href="#order">
-        <span class="menu-icon" aria-hidden="true">🧩</span>
-        <span class="menu-title">השלמת סדר אותיות</span>
-      </a>
-      <a class="menu-card menu-green" href="#first">
-        <span class="menu-icon" aria-hidden="true">🍎</span>
-        <span class="menu-title">מה מתחיל ב...</span>
-      </a>
-      <a class="menu-card menu-purple" href="#names">
-        <span class="menu-icon" aria-hidden="true">🔊</span>
-        <span class="menu-title">שמות האותיות</span>
-      </a>
-      <a class="menu-card menu-yellow" href="#find">
-        <span class="menu-icon" aria-hidden="true">🔍</span>
-        <span class="menu-title">מצא את האות</span>
-      </a>
-      <a class="menu-card menu-pink" href="#memory">
-        <span class="menu-icon" aria-hidden="true">🃏</span>
-        <span class="menu-title">זיכרון אותיות</span>
-      </a>
-      <a class="menu-card menu-teal" href="#pop">
-        <span class="menu-icon" aria-hidden="true">🎈</span>
-        <span class="menu-title">פוצצו את הבלונים</span>
-      </a>
-      <a class="menu-card menu-navy" href="#name">
-        <span class="menu-icon" aria-hidden="true">✍️</span>
-        <span class="menu-title">השם שלי</span>
-      </a>
-      <a class="menu-card menu-orange" href="#final">
-        <span class="menu-icon menu-icon-text" aria-hidden="true">ם</span>
-        <span class="menu-title">אות סופית</span>
-      </a>
-      <a class="menu-card menu-purple" href="#beats">
-        <span class="menu-icon" aria-hidden="true">🗣️</span>
-        <span class="menu-title">כמה צלילים?</span>
-      </a>
-      <a class="menu-card menu-teal" href="#rhyme">
-        <span class="menu-icon" aria-hidden="true">🎶</span>
-        <span class="menu-title">חרוזים</span>
-      </a>
-      <a class="menu-card menu-orange" href="#spell">
-        <span class="menu-icon" aria-hidden="true">🔤</span>
-        <span class="menu-title">בונים מילה</span>
-      </a>
-      <a class="menu-card menu-navy" href="#hidden">
-        <span class="menu-icon" aria-hidden="true">🕵️</span>
-        <span class="menu-title">האות המסתתרת</span>
-      </a>
-    </nav>
+    <div class="app-menu" aria-label="תרגילי אותיות">
+      <h3 class="app-group"><span aria-hidden="true">✍️</span>כותבים</h3>
+      <nav class="app-grid">
+        <a class="app" href="#letters"><span class="app-icon c-coral" aria-hidden="true">✏️</span><span class="app-name">כתיבת אותיות</span></a>
+        <a class="app" href="#name"><span class="app-icon c-navy" aria-hidden="true">✍️</span><span class="app-name">השם שלי</span></a>
+        <a class="app" href="#final"><span class="app-icon c-orange app-icon-text" aria-hidden="true">ם</span><span class="app-name">אות סופית</span></a>
+        <a class="app" href="#spell"><span class="app-icon c-orange" aria-hidden="true">🔤</span><span class="app-name">בונים מילה</span></a>
+      </nav>
+      <h3 class="app-group"><span aria-hidden="true">🔍</span>מכירים אותיות</h3>
+      <nav class="app-grid">
+        <a class="app" href="#names"><span class="app-icon c-purple" aria-hidden="true">🔊</span><span class="app-name">שמות האותיות</span></a>
+        <a class="app" href="#find"><span class="app-icon c-yellow" aria-hidden="true">🔍</span><span class="app-name">מצא את האות</span></a>
+        <a class="app" href="#hidden"><span class="app-icon c-navy" aria-hidden="true">🕵️</span><span class="app-name">האות המסתתרת</span></a>
+        <a class="app" href="#memory"><span class="app-icon c-pink" aria-hidden="true">🃏</span><span class="app-name">זיכרון אותיות</span></a>
+        <a class="app" href="#order"><span class="app-icon c-blue" aria-hidden="true">🧩</span><span class="app-name">השלמת סדר אותיות</span></a>
+      </nav>
+      <h3 class="app-group"><span aria-hidden="true">🗣️</span>צלילים ומילים</h3>
+      <nav class="app-grid">
+        <a class="app" href="#first"><span class="app-icon c-green" aria-hidden="true">🍎</span><span class="app-name">מה מתחיל ב...</span></a>
+        <a class="app" href="#beats"><span class="app-icon c-purple" aria-hidden="true">🗣️</span><span class="app-name">כמה צלילים?</span></a>
+        <a class="app" href="#rhyme"><span class="app-icon c-teal" aria-hidden="true">🎶</span><span class="app-name">חרוזים</span></a>
+      </nav>
+      <h3 class="app-group"><span aria-hidden="true">🎮</span>משחקים</h3>
+      <nav class="app-grid">
+        <a class="app" href="#road"><span class="app-icon c-blue" aria-hidden="true">🚗</span><span class="app-name">מסלול האותיות</span></a>
+        <a class="app" href="#train"><span class="app-icon c-pink" aria-hidden="true">🚂</span><span class="app-name">רכבת האותיות</span></a>
+        <a class="app" href="#monkey"><span class="app-icon c-yellow" aria-hidden="true">🐵</span><span class="app-name">הקוף והבננות</span></a>
+        <a class="app" href="#fish"><span class="app-icon c-teal" aria-hidden="true">🐠</span><span class="app-name">הדג הרעב</span></a>
+        <a class="app" href="#tower"><span class="app-icon c-orange" aria-hidden="true">🧱</span><span class="app-name">מגדל האותיות</span></a>
+        <a class="app" href="#pop"><span class="app-icon c-teal" aria-hidden="true">🎈</span><span class="app-name">פוצצו את הבלונים</span></a>
+      </nav>
+    </div>
   </section>
 
   <!-- Numbers: menu of exercises -->
@@ -143,83 +116,28 @@
       <h2>מספרים</h2>
       <span class="topbar-spacer"></span>
     </div>
-    <nav class="menu menu-grid menu-cols-4" aria-label="תרגילי מספרים">
-      <a class="menu-card" href="#digits">
-        <span class="menu-icon" aria-hidden="true">✏️</span>
-        <span class="menu-title">כתיבת מספרים</span>
-      </a>
-      <a class="menu-card menu-green" href="#count">
-        <span class="menu-icon" aria-hidden="true">🍓</span>
-        <span class="menu-title">כמה יש?</span>
-      </a>
-      <a class="menu-card menu-purple" href="#numnames">
-        <span class="menu-icon" aria-hidden="true">🔊</span>
-        <span class="menu-title">שמות המספרים</span>
-      </a>
-      <a class="menu-card menu-yellow" href="#numfind">
-        <span class="menu-icon" aria-hidden="true">🔍</span>
-        <span class="menu-title">מצא את המספר</span>
-      </a>
-      <a class="menu-card menu-blue" href="#numorder">
-        <span class="menu-icon" aria-hidden="true">🧩</span>
-        <span class="menu-title">השלמת סדר מספרים</span>
-      </a>
-      <a class="menu-card menu-teal" href="#more">
-        <span class="menu-icon" aria-hidden="true">⚖️</span>
-        <span class="menu-title">מה יותר?</span>
-      </a>
-      <a class="menu-card menu-pink" href="#add">
-        <span class="menu-icon" aria-hidden="true">➕</span>
-        <span class="menu-title">חיבור</span>
-      </a>
-    </nav>
-  </section>
-
-  <!-- Games: menu -->
-  <section id="games" class="screen" hidden>
-    <div class="topbar">
-      <a class="btn btn-round" href="#" aria-label="לדף הבית">🏠</a>
-      <h2>משחקים</h2>
-      <span class="topbar-spacer"></span>
+    <div class="app-menu" aria-label="תרגילי מספרים">
+      <h3 class="app-group"><span aria-hidden="true">✍️</span>כותבים ומכירים</h3>
+      <nav class="app-grid">
+        <a class="app" href="#digits"><span class="app-icon c-coral" aria-hidden="true">✏️</span><span class="app-name">כתיבת מספרים</span></a>
+        <a class="app" href="#numnames"><span class="app-icon c-purple" aria-hidden="true">🔊</span><span class="app-name">שמות המספרים</span></a>
+        <a class="app" href="#numfind"><span class="app-icon c-yellow" aria-hidden="true">🔍</span><span class="app-name">מצא את המספר</span></a>
+        <a class="app" href="#numorder"><span class="app-icon c-blue" aria-hidden="true">🧩</span><span class="app-name">השלמת סדר מספרים</span></a>
+      </nav>
+      <h3 class="app-group"><span aria-hidden="true">🧮</span>סופרים ומחשבים</h3>
+      <nav class="app-grid">
+        <a class="app" href="#count"><span class="app-icon c-green" aria-hidden="true">🍓</span><span class="app-name">כמה יש?</span></a>
+        <a class="app" href="#more"><span class="app-icon c-teal" aria-hidden="true">⚖️</span><span class="app-name">מה יותר?</span></a>
+        <a class="app" href="#add"><span class="app-icon c-pink" aria-hidden="true">➕</span><span class="app-name">חיבור</span></a>
+      </nav>
+      <h3 class="app-group"><span aria-hidden="true">🎮</span>משחקים</h3>
+      <nav class="app-grid">
+        <a class="app" href="#numtrain"><span class="app-icon c-navy" aria-hidden="true">🚃</span><span class="app-name">רכבת המספרים</span></a>
+        <a class="app" href="#frog"><span class="app-icon c-green" aria-hidden="true">🐸</span><span class="app-name">הצפרדע והאבנים</span></a>
+        <a class="app" href="#feed"><span class="app-icon c-purple" aria-hidden="true">🐰</span><span class="app-name">האכלת החיות</span></a>
+        <a class="app" href="#lift"><span class="app-icon c-coral" aria-hidden="true">🏢</span><span class="app-name">המעלית</span></a>
+      </nav>
     </div>
-    <nav class="menu menu-grid" aria-label="משחקים">
-      <a class="menu-card menu-blue" href="#road">
-        <span class="menu-icon" aria-hidden="true">🚗</span>
-        <span class="menu-title">מסלול האותיות</span>
-      </a>
-      <a class="menu-card menu-pink" href="#train">
-        <span class="menu-icon" aria-hidden="true">🚂</span>
-        <span class="menu-title">רכבת האותיות</span>
-      </a>
-      <a class="menu-card menu-yellow" href="#monkey">
-        <span class="menu-icon" aria-hidden="true">🐵</span>
-        <span class="menu-title">הקוף והבננות</span>
-      </a>
-      <a class="menu-card menu-teal" href="#fish">
-        <span class="menu-icon" aria-hidden="true">🐠</span>
-        <span class="menu-title">הדג הרעב</span>
-      </a>
-      <a class="menu-card menu-orange" href="#tower">
-        <span class="menu-icon" aria-hidden="true">🧱</span>
-        <span class="menu-title">מגדל האותיות</span>
-      </a>
-      <a class="menu-card menu-green" href="#frog">
-        <span class="menu-icon" aria-hidden="true">🐸</span>
-        <span class="menu-title">הצפרדע והאבנים</span>
-      </a>
-      <a class="menu-card menu-purple" href="#feed">
-        <span class="menu-icon" aria-hidden="true">🐰</span>
-        <span class="menu-title">האכלת החיות</span>
-      </a>
-      <a class="menu-card menu-navy" href="#numtrain">
-        <span class="menu-icon" aria-hidden="true">🚃</span>
-        <span class="menu-title">רכבת המספרים</span>
-      </a>
-      <a class="menu-card " href="#lift">
-        <span class="menu-icon" aria-hidden="true">🏢</span>
-        <span class="menu-title">המעלית</span>
-      </a>
-    </nav>
   </section>
 
   <!-- Letter picker -->
@@ -552,7 +470,7 @@
   <!-- Letter road: drive the car through the letters in order -->
   <section id="road" class="screen" hidden>
     <div class="topbar">
-      <a class="btn btn-round" href="#games" aria-label="חזרה למשחקים">✖</a>
+      <a class="btn btn-round" href="#abc" aria-label="חזרה">✖</a>
       <h2>מסלול האותיות</h2>
       <span class="topbar-spacer"></span>
     </div>
@@ -604,7 +522,7 @@
 
   <section id="train-game" class="screen game-screen" hidden>
     <div class="topbar">
-      <a class="btn btn-round" id="train-back" href="#games" aria-label="חזרה למשחקים">✖</a>
+      <a class="btn btn-round" id="train-back" href="#abc" aria-label="חזרה">✖</a>
       <h2 id="train-title">רכבת האותיות</h2>
       <span class="topbar-spacer"></span>
     </div>
@@ -645,7 +563,7 @@
 
   <section id="monkey-game" class="screen game-screen" hidden>
     <div class="topbar">
-      <a class="btn btn-round" href="#games" aria-label="חזרה למשחקים">✖</a>
+      <a class="btn btn-round" href="#abc" aria-label="חזרה">✖</a>
       <h2>הקוף והבננות</h2>
       <span class="topbar-spacer"></span>
     </div>
@@ -671,7 +589,7 @@
 
   <section id="fish-game" class="screen game-screen" hidden>
     <div class="topbar">
-      <a class="btn btn-round" href="#games" aria-label="חזרה למשחקים">✖</a>
+      <a class="btn btn-round" href="#abc" aria-label="חזרה">✖</a>
       <h2>הדג הרעב</h2>
       <span class="topbar-spacer"></span>
     </div>
@@ -699,7 +617,7 @@
 
   <section id="tower-game" class="screen game-screen" hidden>
     <div class="topbar">
-      <a class="btn btn-round" href="#games" aria-label="חזרה למשחקים">✖</a>
+      <a class="btn btn-round" href="#abc" aria-label="חזרה">✖</a>
       <h2>מגדל האותיות</h2>
       <span class="topbar-spacer"></span>
     </div>
@@ -724,7 +642,7 @@
 
   <section id="frog-game" class="screen game-screen" hidden>
     <div class="topbar">
-      <a class="btn btn-round" href="#games" aria-label="חזרה למשחקים">✖</a>
+      <a class="btn btn-round" href="#numbers" aria-label="חזרה">✖</a>
       <h2>הצפרדע והאבנים</h2>
       <span class="topbar-spacer"></span>
     </div>
@@ -750,7 +668,7 @@
 
   <section id="feed-game" class="screen game-screen" hidden>
     <div class="topbar">
-      <a class="btn btn-round" href="#games" aria-label="חזרה למשחקים">✖</a>
+      <a class="btn btn-round" href="#numbers" aria-label="חזרה">✖</a>
       <h2>האכלת החיות</h2>
       <span class="topbar-spacer"></span>
     </div>
@@ -777,7 +695,7 @@
 
   <section id="lift-game" class="screen game-screen" hidden>
     <div class="topbar">
-      <a class="btn btn-round" href="#games" aria-label="חזרה למשחקים">✖</a>
+      <a class="btn btn-round" href="#numbers" aria-label="חזרה">✖</a>
       <h2>המעלית</h2>
       <span class="topbar-spacer"></span>
     </div>
@@ -1141,6 +1059,6 @@
   <!-- Sivan's celebration, shown every few right answers -->
   <div class="cheer" id="cheer" aria-live="polite"></div>
 
-  <script src="script.js?v=3.5"></script>
+  <script src="script.js?v=3.9"></script>
 </body>
 </html>
