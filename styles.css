@@ -1538,6 +1538,9 @@ button.block.shake { animation: shake 0.4s ease; }
   cursor: pointer;
   touch-action: manipulation;
 }
+.rhyme-pick.rhyme-two { font-size: clamp(34px, 7vw, 60px); white-space: nowrap; }   /* a picture made of two emoji, e.g. 🌹🌹 */
+#rhyme-pic.rhyme-two { font-size: clamp(48px, 10vw, 84px); white-space: nowrap; }
+.rhyme-img { display: block; width: 72%; height: auto; }   /* a drawn picture instead of an emoji */
 .rhyme-card:nth-child(1) { --frame: var(--coral); }
 .rhyme-card:nth-child(2) { --frame: var(--blue); }
 .rhyme-card:nth-child(3) { --frame: #f5b400; }
@@ -1671,6 +1674,27 @@ button.block.shake { animation: shake 0.4s ease; }
 @keyframes cheer-fade { 0% { opacity: 0; } 8%, 90% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes cheer-spin { to { rotate: 360deg; } }
 
+/* ---------- Finish screen ---------- */
+
+/* Sivan on a stage with five stars landing above her one at a time; then the title and the
+   buttons. Times line up with finishGame()'s sounds. */
+.done-stage { display: flex; flex-direction: column; align-items: center; }
+.fin-stars { display: flex; align-items: flex-start; gap: clamp(4px, 1.4vw, 14px); height: calc(clamp(44px, min(9vw, 11dvh), 84px) + 46px); }
+.fin-star { position: relative; width: clamp(44px, min(9vw, 11dvh), 84px); aspect-ratio: 1; opacity: 0; animation: fin-star 0.45s cubic-bezier(0.3, 1.6, 0.5, 1) calc(0.4s + var(--k) * 0.4s) forwards; }
+.fin-star:nth-child(1), .fin-star:nth-child(5) { margin-top: 46px; }
+.fin-star:nth-child(2), .fin-star:nth-child(4) { margin-top: 16px; }
+.fin-star::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 35% 30%, #fff3b0, #ffd23f 45%, #e0a800); clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.15)); }
+.fin-star b { position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; margin: -4px; border-radius: 50%; background: var(--yellow); opacity: 0; animation: fin-burst 0.6s ease-out calc(0.7s + var(--k) * 0.4s) forwards; }
+.fin-star b:nth-child(2n) { background: var(--coral); }
+.fin-sivan { display: flex; flex-direction: column; align-items: center; }
+.fin-sivan img { display: block; height: clamp(130px, 28dvh, 230px); width: auto; animation: fin-bounce 1.2s ease-in-out 2.5s infinite; }
+.fin-podium { width: clamp(170px, 34dvh, 290px); height: 22px; margin-top: -4px; border-radius: 14px 14px 0 0; background: linear-gradient(var(--purple), #7556c9); }
+.order-done .done-text { opacity: 0; font-family: 'Playpen Sans Hebrew', 'Varela Round', sans-serif; font-weight: 800; text-shadow: 0 4px 0 var(--white); animation: pop 0.45s ease 2.5s forwards; }
+.order-done .done-actions { opacity: 0; animation: pop 0.45s ease 3.1s forwards; }
+@keyframes fin-star { 0% { transform: scale(4) rotate(-90deg); opacity: 0; } 100% { transform: scale(1) rotate(0); opacity: 1; } }
+@keyframes fin-burst { 0% { opacity: 1; transform: translate(0, 0); } 100% { opacity: 0; transform: translate(var(--x), var(--y)); } }
+@keyframes fin-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+
 /* ---------- Confetti ---------- */
 
 .confetti {
@@ -1699,4 +1723,6 @@ button.block.shake { animation: shake 0.4s ease; }
 @media (prefers-reduced-motion: reduce) {
   /* the balloons and fish games cannot work without their balloons rising and fish swimming */
   *:not(.balloon):not(.swimmer) { animation: none !important; }
+  /* the finish screen's pieces start hidden and appear by animation: show them outright */
+  .fin-star, .order-done .done-text, .order-done .done-actions { opacity: 1; }
 }

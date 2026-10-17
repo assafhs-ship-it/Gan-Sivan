@@ -1,4 +1,4 @@
-const APP_VERSION = '2.9';
+const APP_VERSION = '3.5';
 
 // Each letter is drawn on a 200x200 board. `strokes` are SVG paths, in the
 // order the child writes them; each path runs in the writing direction.
@@ -577,10 +577,7 @@ function finishOrderRound() {
 }
 
 function finishOrder() {
-  $('order-play').hidden = true;
-  $('order-done').hidden = false;
-  confetti();
-  play('bravo', 'כל הכבוד');
+  finishGame('order');
 }
 
 // ---------- First letter ----------
@@ -664,10 +661,7 @@ function pickFirst(btn) {
 }
 
 function finishFirst() {
-  $('first-play').hidden = true;
-  $('first-done').hidden = false;
-  confetti();
-  play('bravo', 'כל הכבוד');
+  finishGame('first');
 }
 
 // ---------- Names ----------
@@ -739,10 +733,7 @@ function pickName(btn) {
 }
 
 function finishNames() {
-  $('names-play').hidden = true;
-  $('names-done').hidden = false;
-  confetti();
-  play('bravo', 'כל הכבוד');
+  finishGame('names');
 }
 
 // ---------- Find it ----------
@@ -832,10 +823,7 @@ function pickFind(btn) {
 }
 
 function finishFind() {
-  $('find-play').hidden = true;
-  $('find-done').hidden = false;
-  confetti();
-  play('bravo', 'כל הכבוד');
+  finishGame('find');
 }
 
 // ---------- Memory ----------
@@ -896,10 +884,7 @@ function flipCard(btn) {
   m.locked = true;
   setTimeout(() => {
     if (memory !== m) return;
-    $('memory-play').hidden = true;
-    $('memory-done').hidden = false;
-    confetti();
-    play('bravo', 'כל הכבוד');
+    finishGame('memory');
   }, 1500);
 }
 
@@ -1005,10 +990,7 @@ function hitBalloon(b) {
     if (p.round < POP_ROUNDS) { nextPopRound(); return; }
     clearInterval(p.timer);
     $('pop-sky').innerHTML = '';
-    $('pop-play').hidden = true;
-    $('pop-done').hidden = false;
-    confetti();
-    play('bravo', 'כל הכבוד');
+    finishGame('pop');
   }, 2000);
 }
 
@@ -1154,10 +1136,7 @@ function pickFinal(btn) {
   setTimeout(() => {
     if (finals !== f) return;
     if (f.round < FINALS.length) { nextFinalsRound(); return; }
-    $('final-play').hidden = true;
-    $('final-done').hidden = false;
-    confetti();
-    play('bravo', 'כל הכבוד');
+    finishGame('final');
   }, 2200);
 }
 
@@ -1225,11 +1204,50 @@ function answerCard(btn, right, boxId) {
   return true;
 }
 
+// The finish screen: Sivan on a little stage, five gold stars land above her one at a time
+// (one per round, each with a rising ding and a burst of sparkles), then a fanfare, confetti,
+// "כל הכבוד!", and last the buttons. The landing and the reveals are CSS animations that replay
+// whenever the panel is shown; the sounds here are timed to match them.
 function finishGame(prefix) {
   $(`${prefix}-play`).hidden = true;
-  $(`${prefix}-done`).hidden = false;
-  confetti();
-  play('bravo', 'כל הכבוד');
+  const done = $(`${prefix}-done`);
+  done.hidden = false;
+  stopCheer();
+  for (let k = 0; k < 5; k++) setTimeout(() => { if (!done.hidden) starDing(k); }, 650 + k * 400);
+  setTimeout(() => { if (!done.hidden) { jingle(); confetti(); } }, 2500);
+  setTimeout(() => { if (!done.hidden) play('bravo', 'כל הכבוד'); }, 3100);
+}
+
+// One landing star: a bright note, higher for each star.
+function starDing(k) {
+  const ctx = getAudio();
+  if (!ctx) return;
+  const t = ctx.currentTime;
+  [[1, 0.17, 'triangle'], [2.01, 0.05, 'sine']].forEach(([mult, vol, type]) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(660 * 1.122 ** k * mult, t);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(vol, t + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.5);
+  });
+}
+
+// Builds the stage into every finish panel once, at start-up.
+function buildFinishStages() {
+  const burst = range(0, 7).map(p => {
+    const a = p / 8 * Math.PI * 2;
+    return `<b style="--x:${(Math.cos(a) * 46).toFixed(0)}px;--y:${(Math.sin(a) * 46).toFixed(0)}px"></b>`;
+  }).join('');
+  document.querySelectorAll('.order-done .done-stars').forEach(el => {
+    el.className = 'done-stage';
+    el.innerHTML = `<div class="fin-stars">${range(0, 4).map(k => `<i class="fin-star" style="--k:${k}">${burst}</i>`).join('')}</div>` +
+      '<div class="fin-sivan"><img src="images/sivan.png" alt="סיון"><div class="fin-podium"></div></div>';
+  });
 }
 
 // ---------- How many ----------
@@ -1750,27 +1768,46 @@ function pickHidden(g) {
 // A picture is shown and its word spoken; the child picks, from three more pictures, the one
 // whose word rhymes with it. The children can't read, so every answer is a picture: each card
 // says its word from its own 🔊, and tapping the card chooses it.
-// RHYME_GROUPS are rhyme families, every member a picture [emoji, word]. The sound of the
-// n-th picture overall (counting through the families in order) is audio/rhymes/<nn>.m4a.
+// RHYME_GROUPS are rhyme families, every member a picture [emoji, word, sound file number],
+// each family with a `sound` tag shared by families that sound alike. The word's recording is
+// audio/rhymes/<nn>.m4a, nn being its file number, so pictures can be removed or moved freely.
 const RHYME_GROUPS = [
-  [['🎈', 'בלון'], ['🍋', 'לימון'], ['⏰', 'שעון'], ['☎️', 'טלפון'], ['🏰', 'ארמון'], ['🧼', 'סבון'], ['🥒', 'מלפפון'], ['✏️', 'עיפרון']],
-  [['🚲', 'אופניים'], ['✂️', 'מספריים'], ['🧦', 'גרביים'], ['👓', 'משקפיים'], ['👀', 'עיניים'], ['👖', 'מכנסיים']],
-  [['🌙', 'ירח'], ['🌸', 'פרח'], ['🍎', 'תפוח'], ['🔑', 'מפתח'], ['🍉', 'אבטיח'], ['🧊', 'קרח']],
-  [['🥚', 'ביצה'], ['🍕', 'פיצה']],
-  [['🐜', 'נמלה'], ['👗', 'שמלה']],
-  [['🐔', 'תרנגולת'], ['🚪', 'דלת']],
-  [['📕', 'ספר'], ['🐆', 'נמר'], ['🕯️', 'נר']],
-  [['🐢', 'צב'], ['🐰', 'ארנב'], ['⭐', 'כוכב']],
-  [['🐵', 'קוף'], ['🥁', 'תוף']],
-  [['🐶', 'כלב'], ['❤️', 'לב']],
-  [['🦵', 'רגל'], ['🚩', 'דגל']],
-  [['☀️', 'שמש'], ['5️⃣', 'חמש']],
-  [['👃', 'אף'], ['🥄', 'כף']],
-  [['🐴', 'סוס'], ['🚌', 'אוטובוס']],
-  [['🧀', 'גבינה'], ['🚢', 'ספינה']],
+  { sound: 'on', words: [['🎈', 'בלון', 1], ['🍋', 'לימון', 2], ['⏰', 'שעון', 3], ['☎️', 'טלפון', 4], ['🏰', 'ארמון', 5], ['🧼', 'סבון', 6], ['🥒', 'מלפפון', 7], ['✏️', 'עיפרון', 8]] },
+  { sound: 'im', words: [['🚲', 'אופניים', 9], ['✂️', 'מספריים', 10], ['🧦', 'גרביים', 11], ['👓', 'משקפיים', 12], ['👀', 'עיניים', 13], ['👖', 'מכנסיים', 14], ['🙌', 'ידיים', 15], ['👟👟', 'נעליים', 16]] },
+  { sound: 'ach', words: [['🌸', 'פרח', 18], ['🧊', 'קרח', 22]] },
+  { sound: 'ach', words: [['🌙', 'ירח', 17], ['🔑', 'מפתח', 20]] },
+  { sound: 'a', words: [['🥚', 'ביצה', 23], ['img:feather', 'נוצה', 62]] },
+  { sound: 'a', words: [['🐜', 'נמלה', 25], ['👗', 'שמלה', 26]] },
+  { sound: 'et', words: [['🐔', 'תרנגולת', 27], ['img:comb', 'כרבולת', 63]] },
+  { sound: 'er', words: [['🐆', 'נמר', 30], ['🎹', 'פסנתר', 64], ['img:nail', 'מסמר', 67]] },
+  { sound: 'av', words: [['⭐', 'כוכב', 34], ['🐰', 'ארנב', 33]] },
+  { sound: 'av', words: [['🐢', 'צב', 32], ['img:back', 'גב', 65]] },
+  { sound: 'of', words: [['🐵', 'קוף', 35], ['🥁', 'תוף', 36], ['🏖️', 'חוף', 37]] },
+  { sound: 'ev', words: [['🐶', 'כלב', 38], ['❤️', 'לב', 39]] },
+  { sound: 'gel', words: [['🦵', 'רגל', 40], ['🚩', 'דגל', 41]] },
+  { sound: 'esh', words: [['☀️', 'שמש', 42], ['img:freckles', 'נמש', 66]] },
+  { sound: 'af', words: [['👃', 'אף', 44], ['img:flipflops', 'כפכף', 68]] },
+  { sound: 'us', words: [['🐴', 'סוס', 46], ['🚌', 'אוטובוס', 47]] },
+  { sound: 'a', words: [['🧀', 'גבינה', 48], ['🚢', 'ספינה', 49], ['🎁', 'מתנה', 50], ['🖼️', 'תמונה', 51]] },
+  { sound: 'a', words: [['👧', 'ילדה', 52], ['🍦', 'גלידה', 53]] },
+  { sound: 'ag', words: [['🐟', 'דג', 69], ['img:roof', 'גג', 70]] },
+  { sound: 'im', words: [['👧👦', 'ילדים', 56], ['🌹🌹', 'ורדים', 57], ['⚽🏀', 'כדורים', 58], ['💐', 'פרחים', 59], ['👫', 'חברים', 60], ['🎨', 'ציורים', 61]] },
 ];
-const RHYME_ITEMS = RHYME_GROUPS.flatMap((members, group) => members.map(([pic, word]) => ({ pic, word, group })));
-RHYME_ITEMS.forEach((item, n) => { item.audio = `rhymes/${String(n + 1).padStart(2, '0')}`; });
+const RHYME_ITEMS = RHYME_GROUPS.flatMap(({ sound, words }, group) => words.map(([pic, word, file]) =>
+  ({ pic, word, group, sound, audio: `rhymes/${String(file).padStart(2, '0')}` })));
+
+// A picture is an emoji, or 'img:<name>' for a drawing in images/rhymes/ (for words that have
+// no emoji every computer can show: נוצה, כרבולת, גב, נמש, מסמר, כפכף, גג).
+function picHTML(pic) {
+  return pic.startsWith('img:') ? `<img class="rhyme-img" src="images/rhymes/${pic.slice(4)}.svg" alt="">` : pic;
+}
+
+// True for a picture made of two emoji (🌹🌹), counted as the eye sees them.
+function isTwoPics(pic) {
+  if (pic.startsWith('img:')) return false;
+  if (window.Intl && Intl.Segmenter) return [...new Intl.Segmenter().segment(pic)].length > 1;
+  return [...pic.replace(/[\uFE0F\u200D\u20E3]/g, '')].length > 1;
+}
 
 let rhyme = null;
 
@@ -1790,17 +1827,25 @@ function nextRhymeRound() {
   r.answer = pickOne(RHYME_ITEMS.filter(it => it.group === r.item.group && it !== r.item));
   r.locked = false;
 
-  // Two wrong pictures, each from a different other family, so nothing else rhymes.
-  const others = shuffle(RHYME_GROUPS.map((_, g) => g).filter(g => g !== r.item.group)).slice(0, 2);
+  // Two wrong pictures, each from a different other family that doesn't even sound close
+  // (all the "-ָה" families share one sound, as do "-ִים" and "-ַיִם"), so nothing else rhymes.
+  const others = [];
+  for (const g of shuffle(RHYME_GROUPS.map((_, g) => g))) {
+    const sound = RHYME_GROUPS[g].sound;
+    if (sound === r.item.sound || others.some(o => RHYME_GROUPS[o].sound === sound)) continue;
+    others.push(g);
+    if (others.length === 2) break;
+  }
   const choices = shuffle([r.answer, ...others.map(g => pickOne(RHYME_ITEMS.filter(it => it.group === g)))]);
 
   renderDots('rhyme-dots', r.round, NUM_ROUNDS);
-  $('rhyme-pic').textContent = r.item.pic;
+  $('rhyme-pic').innerHTML = picHTML(r.item.pic);
+  $('rhyme-pic').classList.toggle('rhyme-two', isTwoPics(r.item.pic));
   $('rhyme-pic').setAttribute('aria-label', `להשמיע: ${r.item.word}`);
   $('rhyme-cards').innerHTML = choices.map(it => {
     const n = RHYME_ITEMS.indexOf(it);
     return `<div class="rhyme-card" data-n="${n}">` +
-      `<button class="rhyme-pick" type="button" data-n="${n}" aria-label="${it.word}">${it.pic}</button>` +
+      `<button class="rhyme-pick${isTwoPics(it.pic) ? ' rhyme-two' : ''}" type="button" data-n="${n}" aria-label="${it.word}">${picHTML(it.pic)}</button>` +
       `<button class="rhyme-say" type="button" data-say="${n}" aria-label="להשמיע: ${it.word}">🔊</button></div>`;
   }).join('');
 
@@ -2596,7 +2641,14 @@ function cheerTick() {
   setTimeout(celebrate, 900);          // after the answer's own feedback
 }
 
+function stopCheer() {
+  clearTimeout(cheerTimer);
+  $('cheer').className = 'cheer';
+  $('cheer').innerHTML = '';
+}
+
 function celebrate() {
+  if (document.querySelector('.order-done:not([hidden])')) return;   // the finish screen is celebrating already
   const kind = pickOne(CHEER_KINDS);
   const good = Math.random() < 0.5;
   const text = good ? 'עבודה טובה!' : 'כל הכבוד!';
@@ -2881,6 +2933,7 @@ function route() {
 // ---------- Init ----------
 
 $('version').textContent = APP_VERSION;
+buildFinishStages();
 $('erase-btn').addEventListener('click', () => { if (trace) trace.reopen(); });
 $('prev-btn').addEventListener('click', e => { if (trace?.inName) { e.preventDefault(); stepName(-1); } });
 $('next-btn').addEventListener('click', e => { if (trace?.inName) { e.preventDefault(); stepName(1); } });
