@@ -1,4 +1,4 @@
-const APP_VERSION = '4.5';
+const APP_VERSION = '4.6';
 
 // Each letter is drawn on a 200x200 board. `strokes` are SVG paths, in the
 // order the child writes them; each path runs in the writing direction.
