@@ -1638,7 +1638,8 @@ button.block.shake { animation: shake 0.4s ease; }
 /* ---------- Celebration ---------- */
 
 /* Sivan's "כל הכבוד" over the whole screen; it never catches taps. 5.2 s in all. */
-.cheer { position: fixed; inset: 0; z-index: 20; pointer-events: none; overflow: hidden; }
+/* named cheer-layer, not cheer: several games use a 'cheer' class for their own end-of-round hop */
+.cheer-layer { position: fixed; inset: 0; z-index: 20; pointer-events: none; overflow: hidden; }
 .cheer-say { font-family: 'Playpen Sans Hebrew', 'Varela Round', sans-serif; font-weight: 800; color: var(--navy); white-space: nowrap; }
 .cheer-thumb { display: inline-block; font-size: 64px; line-height: 1; }
 .cheer-sivan { display: block; height: 100%; width: auto; }
@@ -1668,7 +1669,7 @@ button.block.shake { animation: shake 0.4s ease; }
 .cheer-medal .cheer-thumb { position: absolute; left: -18%; top: 40%; font-size: 80px; animation: cheer-wave 0.45s ease-in-out 1.1s 7 alternate; }
 .cheer-medal .cheer-say { position: absolute; left: 50%; top: 118%; translate: -50% 0; padding: 4px 26px; border-radius: 999px; background: var(--white); box-shadow: 0 6px 0 rgba(43, 45, 91, 0.15); color: var(--coral); font-size: clamp(2.2rem, 7vw, 4rem); }
 /* a soft white veil behind the medal, so it stands out from the game */
-.cheer.cheer-medal { animation: cheer-veil 5.2s ease forwards; }
+.cheer-layer.cheer-medal { animation: cheer-veil 5.2s ease forwards; }
 @keyframes cheer-veil { 0%, 100% { background: rgba(255, 255, 255, 0); } 8%, 90% { background: rgba(255, 255, 255, 0.6); } }
 .cheer-spark { position: absolute; font-size: 34px; animation: twinkle 1s ease-in-out infinite alternate; }
 @keyframes cheer-medal { 0% { transform: scale(0) rotate(-540deg); } 16% { transform: scale(1.1) rotate(0); } 22%, 90% { transform: scale(1); } 100% { transform: scale(0) translateY(-60px); } }
@@ -1700,6 +1701,82 @@ button.block.shake { animation: shake 0.4s ease; }
 @keyframes fin-star { 0% { transform: scale(4) rotate(-90deg); opacity: 0; } 100% { transform: scale(1) rotate(0); opacity: 1; } }
 @keyframes fin-burst { 0% { opacity: 1; transform: translate(0, 0); } 100% { opacity: 0; transform: translate(var(--x), var(--y)); } }
 @keyframes fin-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+
+/* ---------- Shapes ---------- */
+
+.shape-svg { display: block; width: 72%; height: auto; overflow: visible; }
+.namecard .shape-svg, .memcard-front .shape-svg { width: 74%; }
+.balloon-body .shape-svg { width: 62%; }
+.pop-shapes .balloon-body .shape-svg path { fill: #ffffff; stroke: rgba(0, 0, 0, 0.15); }
+.shape-target .shape-svg { width: min(26vw, 22dvh); }
+.find-letter.shape-target { min-width: 0; padding: 10px 18px; }
+.findtile .shape-svg { margin: auto; }
+
+/* shape hunt: pale outlines that fill with colour when found */
+.hunt-svg .hunt-shape { fill: #ffffff; stroke: #8d90ad; stroke-width: 2.5; stroke-linejoin: round; cursor: pointer; transition: fill 0.5s ease; }
+.hunt-svg .hunt-shape.found, .hunt-svg.colored .hunt-shape { fill: var(--fill); stroke: #2b2d5b; }
+.hunt-svg .hunt-shape.nope { animation: hunt-nope 0.4s ease; }
+@keyframes hunt-nope { 0%, 100% { stroke: #8d90ad; } 40% { stroke: #e5283c; stroke-width: 5; } }
+#shhunt-target .shape-svg { width: clamp(38px, 7vw, 54px); }
+#shhunt-target { padding: 4px; }
+
+/* puzzles */
+.puzzle-wrap { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; gap: clamp(12px, 3vw, 30px); }
+.puzzle-board { height: min(100%, 62dvh); aspect-ratio: 1; background: var(--white); border: 5px solid var(--navy); border-radius: var(--radius); box-shadow: 0 8px 0 rgba(43, 45, 91, 0.15); overflow: hidden; }
+.puzzle-svg { display: block; width: 100%; height: 100%; }
+.puzzle-hole { fill: #f4f5fb; stroke: #8d90ad; stroke-width: 2.5; stroke-dasharray: 7 6; stroke-linejoin: round; transition: fill 0.3s ease; }
+.puzzle-hole.over { fill: #fff3b0; stroke: var(--yellow-dark); }
+.puzzle-hole.hint { animation: hole-hint 0.9s ease 2; }
+.puzzle-hole.filled { fill: var(--fill); stroke: #2b2d5b; stroke-dasharray: none; }
+@keyframes hole-hint { 50% { fill: #fff3b0; stroke: var(--coral); stroke-width: 5; } }
+.puzzle-tray { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.puzzle-piece { width: clamp(72px, 11vw, 110px); aspect-ratio: 1; display: grid; place-items: center; padding: 0; border: 4px solid #e4e6f2; border-radius: 20px; background: var(--white); box-shadow: 0 5px 0 rgba(43, 45, 91, 0.15); cursor: grab; touch-action: none; }
+.puzzle-piece.lifting { opacity: 0.3; }
+.puzzle-piece.used { visibility: hidden; }
+.puzzle-piece.shake { animation: shake 0.4s ease; }
+.puzzle-ghost { position: fixed; z-index: 30; pointer-events: none; opacity: 0.95; box-shadow: 0 14px 22px rgba(43, 45, 91, 0.3); }
+.puzzle-art { transform-box: fill-box; transform-origin: center; }
+.puzzle-board.alive .puzzle-art { animation: alive-bounce 0.6s ease 3; }
+.pic-rocket.alive .puzzle-art { animation: alive-rocket 2.4s ease-in forwards; }
+.pic-car.alive .puzzle-art, .pic-train.alive .puzzle-art { animation: alive-drive 2.4s ease-in forwards; }
+.pic-fish.alive .puzzle-art { animation: alive-swim 0.5s ease-in-out 5 alternate; }
+@keyframes alive-bounce { 50% { transform: translateY(-14px) scale(1.04); } }
+@keyframes alive-rocket { 20% { transform: translateY(6px); } 100% { transform: translateY(-140%); } }
+@keyframes alive-drive { 15% { transform: translateX(4%); } 100% { transform: translateX(-130%); } }
+@keyframes alive-swim { from { transform: translateX(-6%) rotate(-4deg); } to { transform: translateX(6%) rotate(4deg); } }
+
+/* patterns */
+.pattern-row { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: clamp(6px, 1.6vw, 14px); }
+.pattern-item, .pattern-slot { width: clamp(52px, 10vw, 96px); aspect-ratio: 1; display: grid; place-items: center; border-radius: 18px; background: var(--white); box-shadow: 0 5px 0 rgba(43, 45, 91, 0.12); }
+.pattern-slot { border: 4px dashed #c3c6dd; background: rgba(255, 255, 255, 0.7); color: #8b8da8; font-size: clamp(1.8rem, 5vw, 3rem); animation: pulse 1.2s ease-in-out infinite; }
+.pattern-slot.filled { border-style: solid; border-color: var(--green); background: #e6f8ee; animation: pop 0.4s ease; }
+
+/* sorting */
+.sort-current { align-self: center; width: clamp(130px, 26vw, 220px); aspect-ratio: 1; display: grid; place-items: center; }
+.sort-shape { width: 100%; height: 100%; display: grid; place-items: center; animation: pop 0.35s ease; }
+.sort-shape .shape-svg { width: 80%; }
+.sort-baskets { display: flex; justify-content: center; gap: clamp(12px, 4vw, 40px); }
+.sort-basket { position: relative; width: clamp(110px, 20vw, 180px); aspect-ratio: 1.1; display: grid; place-items: center; padding: 10px 10px 18%; border: 0; border-radius: 16px 16px 40px 40px;
+  background: repeating-linear-gradient(90deg, #d9a066 0 12px, #c98a4f 12px 24px); box-shadow: 0 7px 0 #8a5a3b; cursor: pointer; touch-action: manipulation; }
+.sort-basket .shape-svg { width: 60%; }
+.sort-basket .shape-svg path { fill: rgba(255, 255, 255, 0.85); stroke: #2b2d5b; stroke-dasharray: 8 6; }
+.sort-count { position: absolute; bottom: 8%; left: 50%; translate: -50% 0; min-width: 1.8em; padding: 0.1em 0.3em; border-radius: 999px; background: var(--white); color: var(--navy); font-size: clamp(1rem, 2.6vw, 1.4rem); }
+.sort-basket.shake { animation: shake 0.4s ease; }
+.sort-basket.got { animation: basket-gulp 0.5s ease; }
+.sort-count.bump { animation: pop 0.35s ease; }
+.sort-burst { position: absolute; left: 50%; top: 30%; pointer-events: none; }
+.sort-burst i { position: absolute; width: 10px; height: 10px; margin: -5px; border-radius: 3px; animation: sort-spark 0.7s ease-out forwards; }
+@keyframes basket-gulp { 0%, 100% { transform: scale(1, 1); } 30% { transform: scale(1.12, 0.88); } 60% { transform: scale(0.94, 1.08); } }
+@keyframes sort-spark { from { transform: translate(0, 0) rotate(0); opacity: 1; } to { transform: translate(var(--x), var(--y)) rotate(200deg); opacity: 0; } }
+
+/* big and small */
+.size-row { display: flex; justify-content: center; align-items: flex-end; gap: clamp(12px, 4vw, 40px); min-height: clamp(160px, 34dvh, 280px); }
+.size-item { position: relative; width: calc(clamp(160px, 30vw, 260px) * var(--s)); aspect-ratio: 1; padding: 0; border: 0; background: none; cursor: pointer; touch-action: manipulation; }
+.size-item .shape-svg { width: 100%; }
+.size-item.picked .shape-svg { filter: drop-shadow(0 0 10px var(--yellow)); }
+.size-item.shake { animation: shake 0.4s ease; }
+.size-badge { position: absolute; top: -10px; right: -10px; min-width: 1.6em; border-radius: 50%; background: var(--green); color: var(--white); font-size: 1.4rem; line-height: 1.6em; text-align: center; }
+.size-badge:empty { display: none; }
 
 /* ---------- Confetti ---------- */
 

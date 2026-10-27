@@ -12,11 +12,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
   <!-- the site title only: a child's-handwriting font, loaded just for its letters -->
   <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@800&text=%D7%94%D7%92%D7%9F%20%D7%A9%D7%9C%20%D7%A1%D7%99%D7%95%D7%9F&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=4.1">
+  <link rel="stylesheet" href="styles.css?v=4.5">
 </head>
 <body>
 
-  <!-- Landing page: the two sections -->
+  <!-- Landing page: the three sections -->
   <section id="home" class="screen">
     <!-- The kindergarten's song: tap to play, tap again to stop -->
     <button class="song-btn" id="song-btn" type="button" aria-pressed="false" aria-label="לנגן את השיר של הגן">
@@ -59,6 +59,11 @@
         <span class="sparkle" aria-hidden="true">✨</span><span class="sparkle" aria-hidden="true">⭐</span>
         <span class="menu-icon menu-icon-text" aria-hidden="true" dir="ltr">123</span>
         <span class="menu-title">מספרים</span>
+      </a>
+      <a class="menu-card menu-green" href="#shapes">
+        <span class="sparkle" aria-hidden="true">✨</span><span class="sparkle" aria-hidden="true">⭐</span>
+        <span class="menu-icon menu-icon-text" aria-hidden="true">🔺⚪</span>
+        <span class="menu-title">צורות</span>
       </a>
     </nav>
 
@@ -427,8 +432,8 @@
   <!-- Memory: the game -->
   <section id="memory-game" class="screen" hidden>
     <div class="topbar">
-      <a class="btn btn-round" href="#memory" aria-label="חזרה">✖</a>
-      <h2>זיכרון אותיות</h2>
+      <a class="btn btn-round" id="memory-back" href="#memory" aria-label="חזרה">✖</a>
+      <h2 id="memory-title">זיכרון אותיות</h2>
       <span class="topbar-spacer"></span>
     </div>
     <div class="dots" id="memory-dots" aria-hidden="true"></div>
@@ -468,8 +473,8 @@
   <!-- Balloons: the game -->
   <section id="pop-game" class="screen" hidden>
     <div class="topbar">
-      <a class="btn btn-round" href="#pop" aria-label="חזרה">✖</a>
-      <h2>פוצצו את הבלונים</h2>
+      <a class="btn btn-round" id="pop-back" href="#pop" aria-label="חזרה">✖</a>
+      <h2 id="pop-title">פוצצו את הבלונים</h2>
       <span class="topbar-spacer"></span>
     </div>
     <div class="dots" id="pop-dots" aria-hidden="true"></div>
@@ -925,6 +930,349 @@
     </div>
   </section>
 
+  <!-- ===== Shapes ===== -->
+
+  <!-- Shapes: menu of exercises -->
+  <section id="shapes" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#" aria-label="לדף הבית">🏠</a>
+      <h2>צורות</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <nav class="menu menu-grid menu-cols-4" aria-label="תרגילי צורות">
+      <a class="menu-card menu-purple" href="#shnames">
+        <span class="menu-icon" aria-hidden="true">🔊</span>
+        <span class="menu-title">שמות הצורות</span>
+      </a>
+      <a class="menu-card menu-yellow" href="#shfind">
+        <span class="menu-icon" aria-hidden="true">🔍</span>
+        <span class="menu-title">מצא את הצורה</span>
+      </a>
+      <a class="menu-card menu-pink" href="#shmemory">
+        <span class="menu-icon" aria-hidden="true">🃏</span>
+        <span class="menu-title">זיכרון צורות</span>
+      </a>
+      <a class="menu-card menu-green" href="#shobject">
+        <span class="menu-icon" aria-hidden="true">🍕</span>
+        <span class="menu-title">איזו צורה זו?</span>
+      </a>
+      <a class="menu-card menu-navy" href="#shhunt">
+        <span class="menu-icon" aria-hidden="true">🕵️</span>
+        <span class="menu-title">ציד צורות</span>
+      </a>
+      <a class="menu-card" href="#shdraw">
+        <span class="menu-icon" aria-hidden="true">✏️</span>
+        <span class="menu-title">ציור צורות</span>
+      </a>
+      <a class="menu-card menu-orange" href="#build">
+        <span class="menu-icon" aria-hidden="true">🚀</span>
+        <span class="menu-title">בונים מצורות</span>
+      </a>
+      <a class="menu-card menu-blue" href="#pattern">
+        <span class="menu-icon" aria-hidden="true">🔁</span>
+        <span class="menu-title">השלמת דגם</span>
+      </a>
+      <a class="menu-card menu-teal" href="#sort">
+        <span class="menu-icon" aria-hidden="true">🧺</span>
+        <span class="menu-title">מיון צורות</span>
+      </a>
+      <a class="menu-card menu-purple" href="#size">
+        <span class="menu-icon" aria-hidden="true">🐘</span>
+        <span class="menu-title">גדול וקטן</span>
+      </a>
+      <a class="menu-card menu-pink" href="#shtrain">
+        <span class="menu-icon" aria-hidden="true">🚂</span>
+        <span class="menu-title">רכבת הצורות</span>
+      </a>
+      <a class="menu-card menu-teal" href="#shpop">
+        <span class="menu-icon" aria-hidden="true">🎈</span>
+        <span class="menu-title">פוצצו את הצורות</span>
+      </a>
+    </nav>
+  </section>
+
+  <section id="shnames" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#shapes" aria-label="חזרה">✖</a>
+      <h2>שמות הצורות</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <p class="hint">כמה צורות?</p>
+    <div class="level-menu">
+      <a class="level-card" href="#shnames-2" aria-label="שתי צורות">
+        <span class="level-num">2</span>
+        <span class="level-demo" aria-hidden="true"><i>⚪</i><i>🔺</i></span>
+      </a>
+      <a class="level-card" href="#shnames-3" aria-label="שלוש צורות">
+        <span class="level-num">3</span>
+        <span class="level-demo" aria-hidden="true"><i>⚪</i><i>🔺</i><i>🟦</i></span>
+      </a>
+      <a class="level-card" href="#shnames-4" aria-label="ארבע צורות">
+        <span class="level-num">4</span>
+        <span class="level-demo" aria-hidden="true"><i>⚪</i><i>🔺</i><i>🟦</i><i>⭐</i></span>
+      </a>
+    </div>
+  </section>
+
+  <section id="shmemory" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#shapes" aria-label="חזרה">✖</a>
+      <h2>זיכרון צורות</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <p class="hint">כמה קלפים?</p>
+    <div class="level-menu">
+      <a class="level-card" href="#shmemory-6" aria-label="שישה קלפים">
+        <span class="level-num">6</span>
+        <span class="level-demo" aria-hidden="true"><i>🃏</i><i>🃏</i><i>🃏</i></span>
+      </a>
+      <a class="level-card" href="#shmemory-8" aria-label="שמונה קלפים">
+        <span class="level-num">8</span>
+        <span class="level-demo" aria-hidden="true"><i>🃏</i><i>🃏</i><i>🃏</i><i>🃏</i></span>
+      </a>
+      <a class="level-card" href="#shmemory-12" aria-label="שנים עשר קלפים">
+        <span class="level-num">12</span>
+        <span class="level-demo" aria-hidden="true"><i>🃏</i><i>🃏</i><i>🃏</i><i>🃏</i><i>🃏</i></span>
+      </a>
+    </div>
+  </section>
+
+  <section id="pattern" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#shapes" aria-label="חזרה">✖</a>
+      <h2>השלמת דגם</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <p class="hint">קל או קשה?</p>
+    <div class="level-menu">
+      <a class="level-card" href="#pattern-1" aria-label="קל">
+        <span class="level-num level-emoji" aria-hidden="true">🙂</span>
+        <span class="level-demo" aria-hidden="true"><i>🔺</i><i>⚪</i><i>🔺</i><i>⚪</i><i>?</i></span>
+      </a>
+      <a class="level-card" href="#pattern-2" aria-label="קשה">
+        <span class="level-num level-emoji" aria-hidden="true">🤓</span>
+        <span class="level-demo" aria-hidden="true"><i>🔺</i><i>⚪</i><i>🟦</i><i>🔺</i><i>?</i></span>
+      </a>
+    </div>
+  </section>
+
+  <section id="sort" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#shapes" aria-label="חזרה">✖</a>
+      <h2>מיון צורות</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <p class="hint">כמה סלים?</p>
+    <div class="level-menu">
+      <a class="level-card" href="#sort-2" aria-label="שני סלים">
+        <span class="level-num">2</span>
+        <span class="level-demo" aria-hidden="true"><i>🧺</i><i>🧺</i></span>
+      </a>
+      <a class="level-card" href="#sort-3" aria-label="שלושה סלים">
+        <span class="level-num">3</span>
+        <span class="level-demo" aria-hidden="true"><i>🧺</i><i>🧺</i><i>🧺</i></span>
+      </a>
+    </div>
+  </section>
+
+  <section id="size" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#shapes" aria-label="חזרה">✖</a>
+      <h2>גדול וקטן</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <p class="hint">מה עושים?</p>
+    <div class="level-menu">
+      <a class="level-card" href="#size-1" aria-label="הכי גדול או הכי קטן">
+        <span class="level-num level-emoji" aria-hidden="true">🐘</span>
+        <span class="level-demo" aria-hidden="true"><i>🔵</i><i>⚫</i></span>
+      </a>
+      <a class="level-card" href="#size-2" aria-label="מהקטן אל הגדול">
+        <span class="level-num level-emoji" aria-hidden="true">📏</span>
+        <span class="level-demo" aria-hidden="true"><i>•</i><i>●</i><i>⬤</i></span>
+      </a>
+    </div>
+  </section>
+
+  <section id="shpop" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#shapes" aria-label="חזרה">✖</a>
+      <h2>פוצצו את הצורות</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <p class="hint">לאט או מהר?</p>
+    <div class="level-menu">
+      <a class="level-card" href="#shpop-1" aria-label="לאט">
+        <span class="level-num level-emoji" aria-hidden="true">🐢</span>
+        <span class="level-demo" aria-hidden="true"><i>🎈</i></span>
+      </a>
+      <a class="level-card" href="#shpop-2" aria-label="מהר">
+        <span class="level-num level-emoji" aria-hidden="true">🐇</span>
+        <span class="level-demo" aria-hidden="true"><i>🎈</i><i>🎈</i><i>🎈</i></span>
+      </a>
+    </div>
+  </section>
+
+  <section id="shfind-game" class="screen num-game" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#shapes" aria-label="חזרה">✖</a>
+      <h2>מצא את הצורה</h2>
+      <button class="btn btn-round" id="shfind-speak" type="button" aria-label="השמעת שם הצורה">🔊</button>
+    </div>
+    <div class="dots" id="shfind-dots" aria-hidden="true"></div>
+    <p class="game-hint">מוצאים את כל הצורות שדומות לצורה הגדולה</p>
+    <div class="order-play" id="shfind-play">
+      <div class="find-target">
+        <div class="find-letter shape-target" id="shfind-target"></div>
+        <div class="find-marks" id="shfind-marks" aria-hidden="true"></div>
+      </div>
+      <div class="find-tiles" id="shfind-tiles"></div>
+    </div>
+    <div class="order-done" id="shfind-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="shfind-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="shobject-game" class="screen num-game" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#shapes" aria-label="חזרה">✖</a>
+      <h2>איזו צורה זו?</h2>
+      <button class="btn btn-round" id="shobject-speak" type="button" aria-label="השמעת השאלה">🔊</button>
+    </div>
+    <div class="dots" id="shobject-dots" aria-hidden="true"></div>
+    <p class="game-hint">איזו צורה יש לחפץ? בוחרים את הצורה</p>
+    <div class="order-play" id="shobject-play">
+      <button class="picture-card" id="shobject-pic" type="button" aria-label="להשמיע את השאלה"></button>
+      <div class="name-cards" id="shobject-cards"></div>
+    </div>
+    <div class="order-done" id="shobject-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="shobject-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="shhunt-game" class="screen game-screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#shapes" aria-label="חזרה">✖</a>
+      <h2>ציד צורות</h2>
+      <button class="btn btn-round" id="shhunt-speak" type="button" aria-label="השמעת שם הצורה">🔊</button>
+    </div>
+    <div class="dots" id="shhunt-dots" aria-hidden="true"></div>
+    <p class="game-hint">מוצאים בתמונה את כל הצורות האלה ולוחצים עליהן</p>
+    <div class="order-play" id="shhunt-play">
+      <div class="hidden-wrap">
+        <div class="hidden-target" aria-label="הצורה שמחפשים"><b id="shhunt-target"></b><span class="hidden-boxes" id="shhunt-boxes"></span></div>
+        <div class="hidden-scene" id="shhunt-scene"></div>
+      </div>
+    </div>
+    <div class="order-done" id="shhunt-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="shhunt-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="puzzle-game" class="screen game-screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#shapes" aria-label="חזרה">✖</a>
+      <h2 id="puzzle-title">בונים מצורות</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <div class="dots" id="puzzle-dots" aria-hidden="true"></div>
+    <p class="game-hint" id="puzzle-hint">גוררים כל צורה למקום שלה בתמונה</p>
+    <div class="order-play" id="puzzle-play">
+      <div class="puzzle-wrap">
+        <div class="puzzle-board" id="puzzle-board"></div>
+        <div class="puzzle-tray" id="puzzle-tray"></div>
+      </div>
+    </div>
+    <div class="order-done" id="puzzle-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="puzzle-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="pattern-game" class="screen num-game" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#shapes" aria-label="חזרה">✖</a>
+      <h2>השלמת דגם</h2>
+      <button class="btn btn-round" id="pattern-speak" type="button" aria-label="השמעת השאלה">🔊</button>
+    </div>
+    <div class="dots" id="pattern-dots" aria-hidden="true"></div>
+    <p class="game-hint">מה בא אחר כך? בוחרים את הצורה החסרה</p>
+    <div class="order-play" id="pattern-play">
+      <div class="pattern-row" id="pattern-row" dir="ltr"></div>
+      <div class="name-cards" id="pattern-cards"></div>
+    </div>
+    <div class="order-done" id="pattern-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="pattern-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="sort-game" class="screen num-game" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#shapes" aria-label="חזרה">✖</a>
+      <h2>מיון צורות</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <div class="dots" id="sort-dots" aria-hidden="true"></div>
+    <p class="game-hint">לוחצים על הסל של הצורה</p>
+    <div class="order-play" id="sort-play">
+      <div class="sort-current" id="sort-current"></div>
+      <div class="sort-baskets" id="sort-baskets"></div>
+    </div>
+    <div class="order-done" id="sort-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="sort-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="size-game" class="screen num-game" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#shapes" aria-label="חזרה">✖</a>
+      <h2>גדול וקטן</h2>
+      <button class="btn btn-round" id="size-speak" type="button" aria-label="השמעת השאלה">🔊</button>
+    </div>
+    <div class="dots" id="size-dots" aria-hidden="true"></div>
+    <p class="game-hint">מקשיבים ולוחצים על הצורה הנכונה</p>
+    <div class="order-play" id="size-play">
+      <div class="size-row" id="size-row" dir="ltr"></div>
+    </div>
+    <div class="order-done" id="size-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="size-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
   <!-- ===== Numbers ===== -->
 
   <!-- Writing numbers: digit picker (tracing itself uses the #trace screen) -->
@@ -1123,8 +1471,8 @@
   </section>
 
   <!-- Sivan's celebration, shown every few right answers -->
-  <div class="cheer" id="cheer" aria-live="polite"></div>
+  <div class="cheer-layer" id="cheer" aria-live="polite"></div>
 
-  <script src="script.js?v=4.1"></script>
+  <script src="script.js?v=4.5"></script>
 </body>
 </html>

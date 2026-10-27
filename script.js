@@ -1,4 +1,4 @@
-const APP_VERSION = '4.1';
+const APP_VERSION = '4.5';
 
 // Each letter is drawn on a 200x200 board. `strokes` are SVG paths, in the
 // order the child writes them; each path runs in the writing direction.
@@ -832,11 +832,15 @@ const MEMORY_COLS = { 6: 3, 8: 4, 12: 4 };   // cards in the game -> cards in a 
 
 let memory = null;
 
-function startMemory(cards) {
+// `set` is 'abc' (letters) or 'shapes'.
+function startMemory(cards, set = 'abc') {
+  const items = set === 'shapes' ? SHAPE_ITEMS : LETTER_ITEMS;
   const pairs = cards / 2;
-  const letters = shuffle(LETTERS.map((_, i) => i)).slice(0, pairs);
+  const letters = shuffle(items.map((_, i) => i)).slice(0, pairs);
   const deck = shuffle([...letters, ...letters]);
-  memory = { cards, pairs, found: 0, open: [], locked: false };
+  memory = { cards, set, items, pairs, found: 0, open: [], locked: false };
+  $('memory-title').textContent = set === 'shapes' ? 'זיכרון צורות' : 'זיכרון אותיות';
+  $('memory-back').href = set === 'shapes' ? '#shmemory' : '#memory';
 
   $('memory-done').hidden = true;
   $('memory-play').hidden = false;
@@ -846,9 +850,9 @@ function startMemory(cards) {
   grid.style.setProperty('--rows', cards / MEMORY_COLS[cards]);
   grid.innerHTML = deck.map(i =>
     `<button class="memcard" type="button" data-letter="${i}" aria-label="קלף"><span class="memcard-inner">` +
-    `<span class="memcard-back" aria-hidden="true">⭐</span><span class="memcard-front">${LETTERS[i].ch}</span></span></button>`).join('');
+    `<span class="memcard-back" aria-hidden="true">⭐</span><span class="memcard-front">${items[i].ch}</span></span></button>`).join('');
 
-  letters.forEach(i => preload(letterAudio(i)));
+  letters.forEach(i => preload(items[i].audio));
   preload('bravo');
 }
 
@@ -857,7 +861,7 @@ function flipCard(btn) {
   if (!m || m.locked || btn.classList.contains('open')) return;
   const letter = +btn.dataset.letter;
   btn.classList.add('open');
-  play(letterAudio(letter), LETTERS[letter].name);
+  play(m.items[letter].audio, m.items[letter].name);
   m.open.push(btn);
   if (m.open.length < 2) return;
 
@@ -900,9 +904,14 @@ const POP_SPEEDS = {       // level -> seconds to cross the sky, ms between ball
 
 let pop = null;
 
-function startPop(level) {
+// `set` is 'abc' (letters) or 'shapes'.
+function startPop(level, set = 'abc') {
   if (pop) clearInterval(pop.timer);
-  const p = pop = { level, round: 0, used: [], letter: -1, got: 0, locked: false, sinceRight: 0, lanes: [], timer: 0 };
+  const items = set === 'shapes' ? SHAPE_ITEMS : LETTER_ITEMS;
+  const p = pop = { level, set, items, round: 0, used: [], letter: -1, got: 0, locked: false, sinceRight: 0, lanes: [], timer: 0 };
+  $('pop-title').textContent = set === 'shapes' ? 'פוצצו את הצורות' : 'פוצצו את הבלונים';
+  $('pop-back').href = set === 'shapes' ? '#shpop' : '#pop';
+  $('pop-sky').classList.toggle('pop-shapes', set === 'shapes');
   $('pop-done').hidden = true;
   $('pop-play').hidden = false;
   preload('bravo');
@@ -915,7 +924,7 @@ function startPop(level) {
 
 function nextPopRound() {
   const p = pop;
-  p.letter = pickOne(LETTERS.map((_, i) => i).filter(i => !p.used.includes(i)));
+  p.letter = pickOne(p.items.map((_, i) => i).filter(i => !p.used.includes(i)));
   p.used.push(p.letter);
   p.got = 0;
   p.sinceRight = 3;          // so the first balloon up is a right one
@@ -923,13 +932,13 @@ function nextPopRound() {
   $('pop-sky').innerHTML = '';
   renderDots('pop-dots', p.round, POP_ROUNDS);
   renderDots('pop-marks', 0, POP_NEED);
-  preload(letterAudio(p.letter));
+  preload(p.items[p.letter].audio);
   spawnBalloon();
   setTimeout(() => { if (pop === p && !p.locked) sayPopLetter(); }, 400);
 }
 
 function sayPopLetter() {
-  if (pop) play(letterAudio(pop.letter), LETTERS[pop.letter].name);
+  if (pop) play(pop.items[pop.letter].audio, pop.items[pop.letter].name);
 }
 
 function spawnBalloon() {
@@ -940,7 +949,7 @@ function spawnBalloon() {
   // A right balloon about one time in three, and never more than three wrong ones in a row.
   const right = p.sinceRight >= 3 || Math.random() < 0.25;
   p.sinceRight = right ? 0 : p.sinceRight + 1;
-  const letter = right ? p.letter : pickOne(LETTERS.map((_, i) => i).filter(i => i !== p.letter));
+  const letter = right ? p.letter : pickOne(p.items.map((_, i) => i).filter(i => i !== p.letter));
 
   // Keep clear of the lanes the last two balloons used, so they don't overlap.
   const lane = pickOne([...Array(POP_LANES).keys()].filter(l => !p.lanes.includes(l)));
@@ -954,7 +963,7 @@ function spawnBalloon() {
   b.style.setProperty('--hue', Math.floor(Math.random() * 6));
   b.style.setProperty('--travel', `${sky.clientHeight}px`);
   b.style.animationDuration = `${POP_SPEEDS[p.level].rise}s`;
-  b.innerHTML = `<span class="balloon-body">${LETTERS[letter].ch}</span>`;
+  b.innerHTML = `<span class="balloon-body">${p.items[letter].ch}</span>`;
   b.addEventListener('animationend', e => { if (e.target === b) b.remove(); });
   sky.appendChild(b);
 }
@@ -2644,7 +2653,7 @@ function cheerTick() {
 
 function stopCheer() {
   clearTimeout(cheerTimer);
-  $('cheer').className = 'cheer';
+  $('cheer').className = 'cheer-layer';
   $('cheer').innerHTML = '';
 }
 
@@ -2662,15 +2671,15 @@ function celebrate() {
       '<span class="cheer-spark" style="left:-12%;top:-6%">✨</span><span class="cheer-spark" style="right:-10%;top:4%;animation-delay:-.5s">⭐</span><span class="cheer-spark" style="right:-4%;top:70%;animation-delay:-.2s">✨</span></div>',
   };
   const el = $('cheer');
-  el.className = 'cheer';
+  el.className = 'cheer-layer';
   void el.offsetWidth;                 // restart the animation if one is still showing
   el.innerHTML = parts[kind];
-  el.className = `cheer cheer-${kind}`;
+  el.className = `cheer-layer cheer-${kind}`;
   jingle();
   if (kind !== 'peek') confetti();
   setTimeout(() => play(good ? 'good-job' : 'bravo', text), 700);
   clearTimeout(cheerTimer);
-  cheerTimer = setTimeout(() => { el.className = 'cheer'; el.innerHTML = ''; }, CHEER_MS);
+  cheerTimer = setTimeout(() => { el.className = 'cheer-layer'; el.innerHTML = ''; }, CHEER_MS);
 }
 
 // A bright rising arpeggio with a shimmer on top: the "you did it" sound.
@@ -2706,6 +2715,619 @@ function jingle() {
     osc.start(t);
     osc.stop(t + 0.16);
   }
+}
+
+// ---------- Shapes: data ----------
+
+// Every shape, drawn in a 100 x 100 box. `icon` is the shape as it is shown on cards (with a margin);
+// `box` fills the whole box, for scenes and puzzles where a shape is stretched to any size.
+const SHAPES = {
+  circle:   { name: 'עיגול',   icon: 'M8,50 a42,42 0 1,0 84,0 a42,42 0 1,0 -84,0 Z', box: 'M0,50 a50,50 0 1,0 100,0 a50,50 0 1,0 -100,0 Z' },
+  square:   { name: 'ריבוע',   icon: 'M14,14 H86 V86 H14 Z', box: 'M0,0 H100 V100 H0 Z' },
+  triangle: { name: 'משולש',   icon: 'M50,10 L92,86 H8 Z', box: 'M50,0 L100,100 H0 Z' },
+  rect:     { name: 'מלבן',    icon: 'M4,26 H96 V74 H4 Z', box: 'M0,0 H100 V100 H0 Z' },
+  oval:     { name: 'אליפסה',  icon: 'M4,50 a46,30 0 1,0 92,0 a46,30 0 1,0 -92,0 Z', box: 'M0,50 a50,50 0 1,0 100,0 a50,50 0 1,0 -100,0 Z' },
+  rhombus:  { name: 'מעוין',   icon: 'M50,4 L86,50 L50,96 L14,50 Z', box: 'M50,0 L100,50 L50,100 L0,50 Z' },
+  star:     { name: 'כוכב',    icon: 'M50,6 L61,38 L95,38 L67,58 L78,92 L50,72 L22,92 L33,58 L5,38 L39,38 Z' },
+  heart:    { name: 'לב',      icon: 'M50,88 C14,64 4,40 18,24 C30,10 46,16 50,30 C54,16 70,10 82,24 C96,40 86,64 50,88 Z' },
+  pentagon: { name: 'מחומש',   icon: 'M50,6 L94,38 L77,92 H23 L6,38 Z' },
+  hexagon:  { name: 'משושה',   icon: 'M27,10 H73 L96,50 L73,90 H27 L4,50 Z' },
+};
+Object.values(SHAPES).forEach(s => { s.box = s.box || s.icon; });
+const SHAPE_KEYS = Object.keys(SHAPES);
+const BASIC_SHAPES = ['circle', 'square', 'triangle', 'rect'];
+const SHAPE_COLORS = ['#ff7a59', '#3aa0e8', '#4cc38a', '#f5b400', '#9b7bea', '#ff8fb8', '#2bb5b0'];
+// Pairs that are too easily mixed up to put side by side as a wrong answer.
+const SHAPE_CLOSE = [['square', 'rect'], ['circle', 'oval'], ['square', 'rhombus']];
+const shapesClose = (a, b) => SHAPE_CLOSE.some(([x, y]) => (a === x && b === y) || (a === y && b === x));
+const shapeAudio = key => `shapes/${key}`;
+const sayShape = key => play(shapeAudio(key), SHAPES[key].name);
+
+// A shape as a small picture for cards and tiles.
+function shapeSVG(key, color, extra = '') {
+  return `<svg class="shape-svg" viewBox="0 0 100 100" aria-hidden="true"${extra}><path d="${SHAPES[key].icon}" fill="${color}" ` +
+    'stroke="rgba(43,45,91,0.6)" stroke-width="3.5" stroke-linejoin="round"/></svg>';
+}
+// The same shape stretched over a box in a bigger drawing (scene, puzzle), as an SVG <path>.
+function shapeInBox(key, x, y, w, h, rot = 0, attrs = '') {
+  return `<path d="${SHAPES[key].box}" transform="translate(${x} ${y}) rotate(${rot} ${w / 2} ${h / 2}) scale(${w / 100} ${h / 100})" ` +
+    `vector-effect="non-scaling-stroke" ${attrs}/>`;
+}
+
+// Shape items for the shared games (names, memory, balloons), each with its own colour.
+const SHAPE_ITEMS = SHAPE_KEYS.map((key, k) => ({
+  key, name: SHAPES[key].name, audio: shapeAudio(key), ch: shapeSVG(key, SHAPE_COLORS[k % SHAPE_COLORS.length]),
+}));
+
+// ---------- Drawing shapes ----------
+
+// Shapes to trace, written like LETTERS on the 200 x 200 board.
+const SHAPE_TRACE = [
+  { key: 'circle', strokes: ['M100,40 C67,40 40,67 40,100 C40,133 67,160 100,160 C133,160 160,133 160,100 C160,67 133,40 100,40'] },
+  { key: 'square', strokes: ['M45,45 L45,155 L155,155 L155,45 L45,45'] },
+  { key: 'triangle', strokes: ['M100,35 L35,160 L165,160 L100,35'] },
+  { key: 'rect', strokes: ['M25,60 L25,140 L175,140 L175,60 L25,60'] },
+  { key: 'oval', strokes: ['M100,55 C50,55 28,80 28,100 C28,120 50,145 100,145 C150,145 172,120 172,100 C172,80 150,55 100,55'] },
+  { key: 'rhombus', strokes: ['M100,28 L45,100 L100,172 L155,100 L100,28'] },
+  { key: 'star', strokes: ['M100,25 L136,160 L40,78 L160,78 L64,160 L100,25'] },
+  { key: 'heart', strokes: ['M100,72 C82,34 30,42 38,90 C44,122 78,140 100,166', 'M100,72 C118,34 170,42 162,90 C156,122 122,140 100,166'] },
+].map(s => ({ ...s, ch: SHAPES[s.key].name, name: SHAPES[s.key].name }));
+// There is no picker: the shapes come one after another in a random order, straight onto the
+// tracing board. The arrows step back and forth; past the last one a new random order begins.
+let shapeDraw = null;   // { order, pos } while shapes are being traced
+
+function startShapeDraw() {
+  shapeDraw = { order: shuffle(SHAPE_TRACE.map((_, n) => n)), pos: 0 };
+  openShapeTrace();
+}
+
+function openShapeTrace() {
+  const s = SHAPE_TRACE[shapeDraw.order[shapeDraw.pos]];
+  $('trace-title').textContent = s.name;
+  $('trace-back').href = '#shapes';
+  $('prev-btn').href = $('next-btn').href = '#shdraw';   // stepping is handled by stepShapeDraw()
+  startTrace(s, shapeAudio(s.key), { inShapes: true, reopen: openShapeTrace });
+}
+
+function stepShapeDraw(by) {
+  const d = shapeDraw;
+  d.pos = Math.max(0, d.pos + by);
+  if (d.pos >= d.order.length) {   // all done: a new order, not starting with the shape just drawn
+    const last = d.order[d.order.length - 1];
+    do { d.order = shuffle(d.order); } while (d.order[0] === last);
+    d.pos = 0;
+  }
+  openShapeTrace();
+}
+
+// ---------- Find the shape ----------
+
+// A big shape on top and eight shapes below in different colours, sizes and angles; the child
+// finds the 3 or 4 that are the same shape.
+let shfind = null;
+
+function startShapeFind() {
+  shfind = { round: 0, used: [], key: '', left: 0, total: 0, locked: false };
+  $('shfind-done').hidden = true;
+  $('shfind-play').hidden = false;
+  preload('bravo');
+  nextShapeFindRound();
+}
+
+function nextShapeFindRound() {
+  const f = shfind;
+  f.key = pickOne(SHAPE_KEYS.filter(k => !f.used.includes(k)));
+  f.used.push(f.key);
+  f.total = f.left = pickOne([3, 4]);
+  f.locked = false;
+  const others = shuffle(SHAPE_KEYS.filter(k => k !== f.key));
+  const keys = shuffle([...Array(f.total).fill(f.key), ...Array.from({ length: 8 - f.total }, (_, k) => others[k % others.length])]);
+
+  renderDots('shfind-dots', f.round, NUM_ROUNDS);
+  renderDots('shfind-marks', 0, f.total);
+  $('shfind-target').innerHTML = shapeSVG(f.key, pickOne(SHAPE_COLORS));
+  $('shfind-tiles').classList.remove('cheer');
+  $('shfind-tiles').innerHTML = keys.map(k => {
+    const turn = k === 'square' || k === 'rhombus' ? Math.round(Math.random() * 16 - 8) : Math.round(Math.random() * 40 - 20);
+    return `<button class="findtile" type="button" data-shape="${k}" aria-label="${SHAPES[k].name}">` +
+      shapeSVG(k, pickOne(SHAPE_COLORS), ` style="width:${55 + Math.round(Math.random() * 30)}%; rotate:${turn}deg"`) + '</button>';
+  }).join('');
+  preload(shapeAudio(f.key));
+  setTimeout(() => { if (shfind === f && !f.locked) sayShape(f.key); }, 400);
+}
+
+function pickShapeFind(btn) {
+  const f = shfind;
+  if (!f || f.locked || btn.classList.contains('found')) return;
+  if (btn.dataset.shape !== f.key) { boop(); restartAnimation(btn, 'shake'); return; }
+  btn.classList.add('found');
+  f.left--;
+  ding();
+  renderDots('shfind-marks', f.total - f.left, f.total);
+  if (f.left > 0) return;
+  f.locked = true;
+  f.round++;
+  renderDots('shfind-dots', f.round, NUM_ROUNDS);
+  $('shfind-tiles').classList.add('cheer');
+  setTimeout(() => { if (shfind === f) sayShape(f.key); }, 350);
+  setTimeout(() => {
+    if (shfind !== f) return;
+    if (f.round >= NUM_ROUNDS) finishGame('shfind');
+    else nextShapeFindRound();
+  }, 2000);
+}
+
+// ---------- What shape is it? ----------
+
+// An everyday object; the child picks its shape from three.
+const SHAPE_OBJECTS = [
+  ['⚽', 'circle'], ['🍪', 'circle'], ['⏰', 'circle'], ['🌕', 'circle'], ['🍩', 'circle'], ['🏀', 'circle'],
+  ['🎁', 'square'], ['🎲', 'square'], ['🧇', 'square'],
+  ['🍕', 'triangle'], ['⛺', 'triangle'], ['📐', 'triangle'],
+  ['🚪', 'rect'], ['📱', 'rect'], ['📕', 'rect'], ['🍫', 'rect'], ['📺', 'rect'],
+  ['🥚', 'oval'], ['🏉', 'oval'],
+  ['⭐', 'star'], ['🌟', 'star'], ['❤️', 'heart'], ['💝', 'heart'],
+];
+
+let shobject = null;
+
+function startShapeObject() {
+  shobject = { round: 0, used: [], item: null, locked: false };
+  $('shobject-done').hidden = true;
+  $('shobject-play').hidden = false;
+  preload('bravo');
+  preload('q-shape');
+  nextShapeObjectRound();
+}
+
+function nextShapeObjectRound() {
+  const o = shobject;
+  o.item = pickOne(SHAPE_OBJECTS.filter(([, k]) => !o.used.includes(k)));
+  o.used.push(o.item[1]);
+  o.locked = false;
+  const answer = o.item[1];
+  const kinds = [...new Set(SHAPE_OBJECTS.map(([, k]) => k))];
+  const wrong = [];
+  for (const k of shuffle(kinds)) {   // two wrong shapes, none like the answer or like each other
+    if (k === answer || [answer, ...wrong].some(o => shapesClose(o, k))) continue;
+    wrong.push(k);
+    if (wrong.length === 2) break;
+  }
+  const choices = shuffle([answer, ...wrong]);
+
+  renderDots('shobject-dots', o.round, NUM_ROUNDS);
+  $('shobject-pic').textContent = o.item[0];
+  $('shobject-cards').innerHTML = choices.map(k =>
+    `<button class="namecard shape-card" type="button" data-value="${SHAPE_KEYS.indexOf(k)}" aria-label="${SHAPES[k].name}">${shapeSVG(k, pickOne(SHAPE_COLORS))}</button>`).join('');
+  preload(shapeAudio(answer));
+  setTimeout(() => { if (shobject === o && !o.locked) play('q-shape', 'איזו צורה זו?'); }, 400);
+}
+
+function pickShapeObject(btn) {
+  const o = shobject;
+  if (!o || o.locked || btn.classList.contains('off')) return;
+  if (!answerCard(btn, SHAPE_KEYS.indexOf(o.item[1]), 'shobject-cards')) return;
+  o.locked = true;
+  o.round++;
+  renderDots('shobject-dots', o.round, NUM_ROUNDS);
+  setTimeout(() => { if (shobject === o) sayShape(o.item[1]); }, 350);
+  setTimeout(() => {
+    if (shobject !== o) return;
+    if (o.round >= NUM_ROUNDS) finishGame('shobject');
+    else nextShapeObjectRound();
+  }, 2000);
+}
+
+// ---------- Shape hunt ----------
+
+// A picture made of shapes (drawn as pale outlines). The child finds every shape of one kind;
+// each one found fills in with colour. Scenes: [shape, x, y, w, h, rotation, colour] on 900 x 560.
+const HUNT_SCENES = [
+  [ // a house in the garden
+    ['square', 300, 250, 230, 230, 0, '#ffd6a5'], ['triangle', 280, 110, 270, 140, 0, '#ff7a59'], ['rect', 390, 370, 50, 110, 0, '#9b7bea'],
+    ['square', 325, 290, 55, 55, 0, '#bde0fe'], ['square', 450, 290, 55, 55, 0, '#bde0fe'], ['rect', 470, 120, 30, 70, 0, '#b5651d'],
+    ['circle', 720, 50, 110, 110, 0, '#ffd23f'], ['oval', 80, 60, 150, 70, 0, '#f1f8ff'], ['oval', 520, 40, 130, 60, 0, '#f1f8ff'],
+    ['rect', 700, 330, 34, 150, 0, '#b5651d'], ['circle', 640, 200, 150, 150, 0, '#4cc38a'], ['triangle', 60, 300, 120, 180, 0, '#4cc38a'],
+    ['rect', 105, 470, 30, 40, 0, '#b5651d'], ['rhombus', 790, 230, 70, 100, 15, '#ff8fb8'], ['circle', 600, 450, 50, 50, 0, '#3aa0e8'],
+    ['star', 230, 60, 50, 50, 0, '#ffd23f'], ['heart', 820, 470, 50, 50, 0, '#ff7a59'], ['triangle', 160, 470, 40, 40, 0, '#ffd23f'],
+  ],
+  [ // a train in the countryside
+    ['rect', 80, 300, 200, 110, 0, '#ff7a59'], ['square', 200, 220, 80, 80, 0, '#ff7a59'], ['rect', 110, 230, 30, 70, 0, '#2f3e9e'],
+    ['square', 215, 235, 50, 50, 0, '#bde0fe'], ['rect', 310, 310, 180, 100, 0, '#3aa0e8'], ['rect', 520, 310, 180, 100, 0, '#4cc38a'],
+    ['square', 335, 330, 50, 50, 0, '#fff3b0'], ['square', 415, 330, 50, 50, 0, '#fff3b0'], ['square', 545, 330, 50, 50, 0, '#fff3b0'], ['square', 625, 330, 50, 50, 0, '#fff3b0'],
+    ['circle', 100, 400, 60, 60, 0, '#2b2d5b'], ['circle', 200, 400, 60, 60, 0, '#2b2d5b'], ['circle', 330, 400, 55, 55, 0, '#2b2d5b'],
+    ['circle', 425, 400, 55, 55, 0, '#2b2d5b'], ['circle', 540, 400, 55, 55, 0, '#2b2d5b'], ['circle', 635, 400, 55, 55, 0, '#2b2d5b'],
+    ['oval', 90, 150, 90, 55, 0, '#e5e7ef'], ['oval', 60, 80, 110, 60, 0, '#e5e7ef'], ['circle', 760, 60, 100, 100, 0, '#ffd23f'],
+    ['triangle', 730, 200, 140, 200, 0, '#4cc38a'], ['triangle', 600, 170, 110, 140, 0, '#4cc38a'], ['star', 400, 70, 50, 50, 0, '#ffd23f'],
+    ['heart', 300, 110, 50, 50, 0, '#ff8fb8'], ['rhombus', 520, 60, 60, 90, 0, '#9b7bea'],
+  ],
+];
+
+let shhunt = null;
+
+function startShapeHunt() {
+  shhunt = { round: 0, used: [], scene: 0, key: '', found: 0, total: 0, locked: false };
+  $('shhunt-done').hidden = true;
+  $('shhunt-play').hidden = false;
+  preload('bravo');
+  nextShapeHuntRound();
+}
+
+function nextShapeHuntRound() {
+  const h = shhunt;
+  h.scene = h.round % HUNT_SCENES.length;
+  const scene = HUNT_SCENES[h.scene];
+  const counts = {};
+  scene.forEach(([k]) => { counts[k] = (counts[k] || 0) + 1; });
+  h.key = pickOne(Object.keys(counts).filter(k => counts[k] >= 2 && !h.used.includes(`${h.scene}${k}`)));
+  h.used.push(`${h.scene}${h.key}`);
+  h.total = counts[h.key];
+  h.found = 0;
+  h.locked = false;
+
+  renderDots('shhunt-dots', h.round, NUM_ROUNDS);
+  $('shhunt-target').innerHTML = shapeSVG(h.key, pickOne(SHAPE_COLORS));
+  $('shhunt-boxes').innerHTML = Array(h.total).fill('<i></i>').join('');
+  $('shhunt-scene').innerHTML = `<svg viewBox="0 0 900 560" class="hidden-svg hunt-svg" role="img" aria-label="תמונה מצורות">` +
+    '<rect width="900" height="560" fill="#ffffff"/><path d="M0,470 Q450,440 900,470 V560 H0 Z" fill="#eef8ea"/>' +
+    scene.map(([k, x, y, w, hh, rot, c]) => shapeInBox(k, x, y, w, hh, rot, `class="hunt-shape" data-shape="${k}" style="--fill:${c}"`)).join('') + '</svg>';
+  preload(shapeAudio(h.key));
+  setTimeout(() => { if (shhunt === h && !h.locked) sayShape(h.key); }, 400);
+}
+
+function pickShapeHunt(el) {
+  const h = shhunt;
+  if (!h || h.locked || !el || el.classList.contains('found')) return;
+  if (el.dataset.shape !== h.key) { boop(); el.classList.remove('nope'); void el.getBoundingClientRect(); el.classList.add('nope'); return; }
+  el.classList.add('found');
+  const box = $('shhunt-boxes').children[h.found];
+  box.classList.add('on');
+  h.found++;
+  ding();
+  sayShape(h.key);
+  if (h.found < h.total) return;
+  h.locked = true;
+  h.round++;
+  $('shhunt-scene').querySelector('svg').classList.add('colored');
+  renderDots('shhunt-dots', h.round, NUM_ROUNDS);
+  setTimeout(() => {
+    if (shhunt !== h) return;
+    if (h.round >= NUM_ROUNDS) finishGame('shhunt');
+    else nextShapeHuntRound();
+  }, 2600);
+}
+
+// ---------- Puzzles: build a picture, fill the train ----------
+
+// A board with shape holes (a dashed outline each); the child drags the shapes from the tray into
+// the matching holes. A finished picture comes to life. Pictures are [shape, x, y, w, h, rotation,
+// colour] on a 300 x 300 board; `decor` is drawn under the holes.
+const PUZZLE_PICTURES = [
+  { name: 'house', holes: [['square', 70, 140, 160, 140, 0, '#ffd6a5'], ['triangle', 50, 40, 200, 100, 0, '#ff7a59'], ['rect', 130, 200, 40, 80, 0, '#9b7bea'], ['circle', 210, 15, 70, 70, 0, '#ffd23f']] },
+  { name: 'rocket', holes: [['rect', 120, 90, 60, 140, 0, '#e5e7ef'], ['triangle', 110, 20, 80, 70, 0, '#ff7a59'], ['circle', 132, 115, 36, 36, 0, '#3aa0e8'], ['triangle', 70, 180, 50, 60, 0, '#9b7bea'], ['triangle', 180, 180, 50, 60, 0, '#9b7bea']] },
+  { name: 'fish', holes: [['oval', 40, 90, 170, 110, 0, '#ffb347'], ['triangle', 200, 100, 70, 90, -90, '#ff7a59'], ['circle', 75, 125, 22, 22, 0, '#2b2d5b'], ['heart', 230, 30, 40, 40, 0, '#ff8fb8']] },
+  { name: 'car', holes: [['rect', 30, 140, 240, 70, 0, '#3aa0e8'], ['rect', 80, 90, 130, 55, 0, '#bde0fe'], ['circle', 55, 185, 60, 60, 0, '#2b2d5b'], ['circle', 185, 185, 60, 60, 0, '#2b2d5b']] },
+  { name: 'tree', holes: [['rect', 130, 190, 40, 90, 0, '#b5651d'], ['triangle', 60, 50, 180, 150, 0, '#4cc38a'], ['star', 125, 8, 50, 50, 0, '#ffd23f']] },
+];
+const PUZZLE_ROUNDS = 4;
+
+let puzzle = null;
+
+// kind: 'build' (pictures) or 'train' (a train whose wagons have shape holes)
+function startPuzzle(kind) {
+  puzzle = { kind, round: 0, order: shuffle(PUZZLE_PICTURES.map((_, k) => k)), left: 0, locked: false, drag: null };
+  $('puzzle-title').textContent = kind === 'build' ? 'בונים מצורות' : 'רכבת הצורות';
+  $('puzzle-hint').textContent = kind === 'build' ? 'גוררים כל צורה למקום שלה בתמונה' : 'גוררים כל צורה לחור שלה בקרון, והרכבת יוצאת לדרך';
+  $('puzzle-done').hidden = true;
+  $('puzzle-play').hidden = false;
+  preload('bravo');
+  nextPuzzle();
+}
+
+// A train: the engine, then three wagons, each with one shape hole.
+function trainPicture() {
+  const keys = shuffle(SHAPE_KEYS.filter(k => k !== 'rect' && k !== 'oval')).slice(0, 3);
+  const decor = '<rect x="0" y="262" width="300" height="8" fill="#8a5a3b"/>' +
+    '<g stroke="#2b2d5b" stroke-width="2.5"><rect x="214" y="150" width="70" height="90" rx="8" fill="#e5283c"/><rect x="226" y="120" width="18" height="30" fill="#2b2d5b"/>' +
+    '<rect x="230" y="165" width="40" height="30" rx="4" fill="#bde0fe"/>' +
+    [0, 1, 2].map(w => `<rect x="${10 + w * 68}" y="170" width="62" height="70" rx="8" fill="${['#9b7bea', '#f5b400', '#4cc38a'][w]}"/>`).join('') +
+    [20, 52, 88, 120, 156, 188, 228, 262].map(x => `<circle cx="${x}" cy="248" r="13" fill="#2b2d5b"/>`).join('') + '</g>';
+  return { name: 'train', decor, holes: keys.map((k, w) => [k, 18 + w * 68, 178, 46, 46, 0, SHAPE_COLORS[w + 1]]) };
+}
+
+function nextPuzzle() {
+  const p = puzzle;
+  p.pic = p.kind === 'build' ? PUZZLE_PICTURES[p.order[p.round % p.order.length]] : trainPicture();
+  p.left = p.pic.holes.length;
+  p.locked = false;
+
+  renderDots('puzzle-dots', p.round, PUZZLE_ROUNDS);
+  const board = $('puzzle-board');
+  board.className = `puzzle-board pic-${p.pic.name}`;
+  board.innerHTML = '<svg viewBox="0 0 300 300" class="puzzle-svg"><g class="puzzle-art">' + (p.pic.decor || '') +
+    p.pic.holes.map(([k, x, y, w, h, rot, c], n) => shapeInBox(k, x, y, w, h, rot, `class="puzzle-hole" data-shape="${k}" data-n="${n}" style="--fill:${c}"`)).join('') + '</g></svg>';
+  // The tray: one piece per hole, and on the train one extra shape that fits nowhere.
+  const pieces = p.pic.holes.map(([k, , , , , , c]) => [k, c]);
+  if (p.kind === 'train') pieces.push([pickOne(SHAPE_KEYS.filter(k => !p.pic.holes.some(hh => hh[0] === k) && k !== 'rect' && k !== 'oval')), pickOne(SHAPE_COLORS)]);
+  $('puzzle-tray').innerHTML = shuffle(pieces).map(([k, c]) =>
+    `<button class="puzzle-piece" type="button" data-shape="${k}" data-color="${c}" aria-label="${SHAPES[k].name}">${shapeSVG(k, c)}</button>`).join('');
+  $('puzzle-tray').querySelectorAll('.puzzle-piece').forEach(makePieceDraggable);
+}
+
+// Drag a piece with a finger or the mouse; a tap without moving lights up where it could go.
+function makePieceDraggable(piece) {
+  let ghost = null, sx = 0, sy = 0, moved = false;
+  piece.addEventListener('pointerdown', e => {
+    if (!puzzle || puzzle.locked) return;
+    e.preventDefault();
+    piece.setPointerCapture?.(e.pointerId);
+    sx = e.clientX; sy = e.clientY; moved = false;
+    const r = piece.getBoundingClientRect();
+    ghost = piece.cloneNode(true);
+    ghost.className = 'puzzle-piece puzzle-ghost';
+    Object.assign(ghost.style, { left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` });
+    document.body.appendChild(ghost);
+    piece.classList.add('lifting');
+  });
+  piece.addEventListener('pointermove', e => {
+    if (!ghost) return;
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    if (Math.hypot(dx, dy) > 8) moved = true;
+    ghost.style.transform = `translate(${dx}px, ${dy}px) scale(1.1)`;
+    document.querySelectorAll('.puzzle-hole.over').forEach(h => h.classList.remove('over'));
+    holeAt(e.clientX, e.clientY, piece.dataset.shape)?.classList.add('over');
+  });
+  const end = (e, dropped) => {
+    if (!ghost) return;
+    ghost.remove(); ghost = null;
+    piece.classList.remove('lifting');
+    document.querySelectorAll('.puzzle-hole.over').forEach(h => h.classList.remove('over'));
+    if (!dropped) return;
+    if (!moved) { hintHoles(piece.dataset.shape); return; }
+    dropPiece(piece, holeAt(e.clientX, e.clientY, piece.dataset.shape));
+  };
+  piece.addEventListener('pointerup', e => end(e, true));
+  piece.addEventListener('pointercancel', e => end(e, false));
+}
+
+// The empty hole under a point, with a margin around it. Where holes overlap (a window inside a
+// wall), one that fits the dragged shape wins; otherwise the one on top.
+function holeAt(x, y, key) {
+  const under = [...document.querySelectorAll('#puzzle-board .puzzle-hole:not(.filled)')].filter(h => {
+    const b = h.getBoundingClientRect();
+    const pad = Math.max(14, Math.min(b.width, b.height) * 0.2);
+    return x > b.left - pad && x < b.right + pad && y > b.top - pad && y < b.bottom + pad;
+  });
+  return under.find(h => h.dataset.shape === key) || under[under.length - 1] || null;
+}
+
+function hintHoles(key) {
+  document.querySelectorAll(`#puzzle-board .puzzle-hole[data-shape="${key}"]:not(.filled)`).forEach(h => restartAnimation(h, 'hint'));
+  sayShape(key);
+}
+
+function dropPiece(piece, hole) {
+  const p = puzzle;
+  if (!hole) return;                          // let go away from any hole: the piece goes back
+  if (hole.dataset.shape !== piece.dataset.shape) { boop(); restartAnimation(piece, 'shake'); return; }
+  hole.classList.add('filled');
+  piece.classList.add('used');
+  ding();
+  sayShape(piece.dataset.shape);
+  if (--p.left > 0) return;
+
+  // Done: the picture comes to life, then the next one.
+  p.locked = true;
+  p.round++;
+  renderDots('puzzle-dots', p.round, PUZZLE_ROUNDS);
+  $('puzzle-tray').querySelectorAll('.puzzle-piece:not(.used)').forEach(x => x.classList.add('used'));
+  setTimeout(() => {
+    if (puzzle !== p) return;
+    $('puzzle-board').classList.add('alive');
+    if (p.kind === 'train') toot(); else jingle();
+  }, 400);
+  setTimeout(() => {
+    if (puzzle !== p) return;
+    if (p.round >= PUZZLE_ROUNDS) finishGame('puzzle');
+    else nextPuzzle();
+  }, 3000);
+}
+
+// ---------- Patterns ----------
+
+// A row of shapes in a repeating pattern with the last one missing; the child picks it.
+// Level 1: AB patterns. Level 2: ABC, AAB or ABB.
+let pattern = null;
+
+function startPattern(level) {
+  pattern = { level, round: 0, answer: null, locked: false };
+  $('pattern-done').hidden = true;
+  $('pattern-play').hidden = false;
+  preload('bravo');
+  preload('q-next');
+  nextPatternRound();
+}
+
+function nextPatternRound() {
+  const p = pattern;
+  const unit = pickOne(p.level === 1 ? ['AB'] : ['ABC', 'AAB', 'ABB']);
+  const letters = [...new Set(unit)];
+  const keys = shuffle(BASIC_SHAPES.concat(['star', 'heart'])).slice(0, letters.length);
+  const colors = shuffle([...SHAPE_COLORS]).slice(0, letters.length);
+  const items = Object.fromEntries(letters.map((l, k) => [l, { key: keys[k], color: colors[k] }]));
+  const length = unit.length === 2 ? 6 : 7;
+  const seq = Array.from({ length }, (_, k) => items[unit[k % unit.length]]);
+  p.answer = seq[length - 1];
+  p.locked = false;
+
+  // Choices: the answer and two others, one of them another shape of the pattern.
+  const pool = [...Object.values(items).filter(it => it !== p.answer),
+    ...shuffle(SHAPE_KEYS.filter(k => !keys.includes(k))).slice(0, 2).map(key => ({ key, color: pickOne(SHAPE_COLORS) }))];
+  const choices = shuffle([p.answer, ...pool.slice(0, 2)]);
+
+  renderDots('pattern-dots', p.round, NUM_ROUNDS);
+  $('pattern-row').innerHTML = seq.map((it, k) => k === length - 1
+    ? '<span class="pattern-slot" id="pattern-slot">?</span>'
+    : `<span class="pattern-item">${shapeSVG(it.key, it.color)}</span>`).join('');
+  $('pattern-cards').innerHTML = choices.map((it, k) =>
+    `<button class="namecard shape-card" type="button" data-value="${it === p.answer ? 1 : 0}" data-k="${k}" aria-label="${SHAPES[it.key].name}">${shapeSVG(it.key, it.color)}</button>`).join('');
+  setTimeout(() => { if (pattern === p && !p.locked) play('q-next', 'מה בא אחר כך?'); }, 400);
+}
+
+function pickPattern(btn) {
+  const p = pattern;
+  if (!p || p.locked || btn.classList.contains('off')) return;
+  if (!answerCard(btn, 1, 'pattern-cards')) return;
+  p.locked = true;
+  p.round++;
+  const slot = $('pattern-slot');
+  slot.innerHTML = shapeSVG(p.answer.key, p.answer.color);
+  slot.classList.add('filled');
+  renderDots('pattern-dots', p.round, NUM_ROUNDS);
+  setTimeout(() => { if (pattern === p) sayShape(p.answer.key); }, 350);
+  setTimeout(() => {
+    if (pattern !== p) return;
+    if (p.round >= NUM_ROUNDS) finishGame('pattern');
+    else nextPatternRound();
+  }, 2000);
+}
+
+// ---------- Sorting shapes ----------
+
+// Shapes come one at a time in different colours, sizes and angles; the child taps the basket
+// with that shape on it. `level` is the number of baskets.
+const SORT_TOTAL = 10;
+
+let sorting = null;
+
+function startSort(level) {
+  const keys = shuffle([...BASIC_SHAPES, 'star', 'heart']).filter((k, n, all) => !all.slice(0, n).some(o => shapesClose(o, k))).slice(0, level);
+  sorting = { level, keys, done: 0, key: '', locked: false };
+  $('sort-done').hidden = true;
+  $('sort-play').hidden = false;
+  preload('bravo');
+  keys.forEach(k => preload(shapeAudio(k)));
+  $('sort-baskets').innerHTML = keys.map(k =>
+    `<button class="sort-basket" type="button" data-shape="${k}" aria-label="${SHAPES[k].name}">${shapeSVG(k, '#ffffff')}<span class="sort-count">0</span></button>`).join('');
+  nextSortShape();
+}
+
+function nextSortShape() {
+  const s = sorting;
+  s.key = pickOne(s.keys);
+  s.locked = false;
+  renderDots('sort-dots', s.done, SORT_TOTAL);
+  const turn = s.key === 'square' ? Math.round(Math.random() * 16 - 8) : Math.round(Math.random() * 50 - 25);
+  $('sort-current').innerHTML = `<span class="sort-shape">${shapeSVG(s.key, pickOne(SHAPE_COLORS), ` style="width:${60 + Math.round(Math.random() * 40)}%; rotate:${turn}deg"`)}</span>`;
+}
+
+function pickSort(btn) {
+  const s = sorting;
+  if (!s || s.locked) return;
+  if (btn.dataset.shape !== s.key) { boop(); restartAnimation(btn, 'shake'); return; }
+  s.locked = true;
+  s.done++;
+  // The shape hops up, then flies in an arc into the basket, spinning and shrinking; the basket
+  // gulps it with a bounce and a burst of sparkles.
+  const shape = $('sort-current').firstElementChild;
+  const from = shape.getBoundingClientRect(), to = btn.getBoundingClientRect();
+  const dx = to.left + to.width / 2 - from.left - from.width / 2;
+  const dy = to.top + to.height * 0.45 - from.top - from.height / 2;
+  const spin = dx < 0 ? -1 : 1;
+  shape.animate([
+    { transform: 'translate(0, 0) scale(1) rotate(0deg)', offset: 0 },
+    { transform: `translate(${dx * 0.05}px, -26px) scale(1.12) rotate(${spin * -10}deg)`, offset: 0.18 },
+    { transform: `translate(${dx * 0.55}px, ${Math.min(dy * 0.25, -40)}px) scale(0.8) rotate(${spin * 200}deg)`, offset: 0.62 },
+    { transform: `translate(${dx}px, ${dy}px) scale(0.28) rotate(${spin * 360}deg)`, offset: 1 },
+  ], { duration: 750, easing: 'cubic-bezier(0.45, 0, 0.55, 1)', fill: 'forwards' });
+  const count = btn.querySelector('.sort-count');
+  setTimeout(() => {
+    if (sorting !== s) return;
+    shape.style.visibility = 'hidden';
+    count.textContent = +count.textContent + 1;
+    restartAnimation(btn, 'got');
+    restartAnimation(count, 'bump');
+    sortBurst(btn);
+    ding();
+    sayShape(s.key);
+    renderDots('sort-dots', s.done, SORT_TOTAL);
+  }, 750);
+  setTimeout(() => {
+    if (sorting !== s) return;
+    if (s.done >= SORT_TOTAL) finishGame('sort');
+    else nextSortShape();
+  }, 1700);
+}
+
+// Little coloured sparks flying out of the basket's mouth.
+function sortBurst(basket) {
+  const burst = document.createElement('span');
+  burst.className = 'sort-burst';
+  burst.innerHTML = range(0, 9).map(k => {
+    const a = Math.PI * (1.05 + k * 0.09);   // a fan pointing upwards
+    return `<i style="--x:${(Math.cos(a) * 70).toFixed(0)}px; --y:${(Math.sin(a) * 70).toFixed(0)}px; background:${SHAPE_COLORS[k % SHAPE_COLORS.length]}"></i>`;
+  }).join('');
+  basket.appendChild(burst);
+  setTimeout(() => burst.remove(), 800);
+}
+
+// ---------- Big and small ----------
+
+// Three of the same shape in three sizes. Level 1: the voice asks which is bigger or smaller.
+// Level 2: the child taps them from the smallest to the biggest.
+const SIZE_SCALES = [0.45, 0.72, 1];
+
+let sizing = null;
+
+function startSize(level) {
+  sizing = { level, round: 0, ask: '', next: 0, locked: false };
+  $('size-done').hidden = true;
+  $('size-play').hidden = false;
+  preload('bravo');
+  ['q-big', 'q-small', 'q-order'].forEach(preload);
+  nextSizeRound();
+}
+
+function nextSizeRound() {
+  const z = sizing;
+  const key = pickOne(SHAPE_KEYS);
+  const color = pickOne(SHAPE_COLORS);
+  z.ask = z.level === 1 ? pickOne(['big', 'small']) : 'order';
+  z.next = 0;
+  z.locked = false;
+  renderDots('size-dots', z.round, NUM_ROUNDS);
+  $('size-row').innerHTML = shuffle([0, 1, 2]).map(n =>
+    `<button class="size-item" type="button" data-rank="${n}" aria-label="${SHAPES[key].name}" style="--s:${SIZE_SCALES[n]}">${shapeSVG(key, color)}<span class="size-badge"></span></button>`).join('');
+  setTimeout(() => { if (sizing === z && !z.locked) saySize(); }, 400);
+}
+
+function saySize() {
+  if (!sizing) return;
+  const q = { big: ['q-big', 'איזו צורה גדולה יותר?'], small: ['q-small', 'איזו צורה קטנה יותר?'], order: ['q-order', 'מהקטן אל הגדול'] }[sizing.ask];
+  play(...q);
+}
+
+function pickSize(btn) {
+  const z = sizing;
+  if (!z || z.locked || btn.classList.contains('picked')) return;
+  const rank = +btn.dataset.rank;
+  const want = z.ask === 'big' ? 2 : z.ask === 'small' ? 0 : z.next;
+  if (rank !== want) { boop(); restartAnimation(btn, 'shake'); return; }
+  btn.classList.add('picked');
+  ding();
+  if (z.ask === 'order') {
+    btn.querySelector('.size-badge').textContent = ++z.next;
+    play(numAudio(z.next), NUMBERS[z.next]);
+    if (z.next < 3) return;
+  }
+  z.locked = true;
+  z.round++;
+  renderDots('size-dots', z.round, NUM_ROUNDS);
+  setTimeout(() => {
+    if (sizing !== z) return;
+    if (z.round >= NUM_ROUNDS) finishGame('size');
+    else nextSizeRound();
+  }, 1800);
 }
 
 // ---------- Song ----------
@@ -2808,6 +3430,14 @@ function route() {
   const numOrder = hash.match(/^numorder-(10|20)$/);
   beats = null;
   road = null;
+  shfind = null;
+  shobject = null;
+  shhunt = null;
+  puzzle = null;
+  pattern = null;
+  sorting = null;
+  sizing = null;
+  const shapeLevel = hash.match(/^(shnames|shmemory|pattern|sort|size|shpop)-(\d+)$/);
   rhyme = null;
   spell = null;
   if (hidden) clearTimeout(hidden.hint);
@@ -2821,7 +3451,33 @@ function route() {
   lift = null;
   const spellLevel = hash.match(/^spell-([12])$/);
   const hiddenLevel = hash.match(/^hidden-([12])$/);
-  if (spellLevel) {
+  if (shapeLevel) {
+    const [, kind, lv] = shapeLevel;
+    const n = +lv;
+    if (kind === 'shnames') { show('names-game'); startNames({ items: SHAPE_ITEMS, level: n, title: 'שמות הצורות', back: '#shnames' }); }
+    if (kind === 'shmemory') { show('memory-game'); startMemory(n, 'shapes'); }
+    if (kind === 'shpop') { show('pop-game'); startPop(n, 'shapes'); }
+    if (kind === 'pattern') { show('pattern-game'); startPattern(n); }
+    if (kind === 'sort') { show('sort-game'); startSort(n); }
+    if (kind === 'size') { show('size-game'); startSize(n); }
+  } else if (hash === 'shdraw') {
+    show('trace');
+    startShapeDraw();
+  } else if (hash === 'shfind') {
+    show('shfind-game');
+    startShapeFind();
+  } else if (hash === 'shobject') {
+    show('shobject-game');
+    startShapeObject();
+  } else if (hash === 'shhunt') {
+    show('shhunt-game');
+    startShapeHunt();
+  } else if (hash === 'build' || hash === 'shtrain') {
+    show('puzzle-game');
+    startPuzzle(hash === 'build' ? 'build' : 'train');
+  } else if (['shapes', 'shnames', 'shmemory', 'pattern', 'sort', 'size', 'shpop'].includes(hash)) {
+    show(hash);
+  } else if (spellLevel) {
     show('spell-game');
     startSpell(+spellLevel[1]);
   } else if (hiddenLevel) {
@@ -2958,6 +3614,8 @@ addHomeButtons();
 $('erase-btn').addEventListener('click', () => { if (trace) trace.reopen(); });
 $('prev-btn').addEventListener('click', e => { if (trace?.inName) { e.preventDefault(); stepName(-1); } });
 $('next-btn').addEventListener('click', e => { if (trace?.inName) { e.preventDefault(); stepName(1); } });
+$('prev-btn').addEventListener('click', e => { if (trace?.inShapes) { e.preventDefault(); stepShapeDraw(-1); } });
+$('next-btn').addEventListener('click', e => { if (trace?.inShapes) { e.preventDefault(); stepShapeDraw(1); } });
 $('name-form').addEventListener('submit', e => {
   e.preventDefault();
   const input = $('name-input');
@@ -2999,12 +3657,12 @@ $('find-tiles').addEventListener('click', e => {
   const btn = e.target.closest('.findtile');
   if (btn) pickFind(btn);
 });
-$('memory-again').addEventListener('click', () => { if (memory) startMemory(memory.cards); });
+$('memory-again').addEventListener('click', () => { if (memory) startMemory(memory.cards, memory.set); });
 $('memory-grid').addEventListener('click', e => {
   const btn = e.target.closest('.memcard');
   if (btn) flipCard(btn);
 });
-$('pop-again').addEventListener('click', () => { if (pop) startPop(pop.level); });
+$('pop-again').addEventListener('click', () => { if (pop) startPop(pop.level, pop.set); });
 $('pop-speak').addEventListener('click', sayPopLetter);
 $('pop-sky').addEventListener('pointerdown', e => {
   const b = e.target.closest('.balloon');
@@ -3098,6 +3756,26 @@ $('spell-tiles').addEventListener('click', e => {
 });
 $('hidden-again').addEventListener('click', () => { if (hidden) startHidden(hidden.level); });
 $('hidden-scene').addEventListener('click', e => pickHidden(e.target.closest('.hidden-letter')));
+$('shfind-again').addEventListener('click', startShapeFind);
+$('shfind-speak').addEventListener('click', () => { if (shfind) sayShape(shfind.key); });
+$('shfind-target').addEventListener('click', () => { if (shfind) sayShape(shfind.key); });
+$('shfind-tiles').addEventListener('click', e => { const b = e.target.closest('.findtile'); if (b) pickShapeFind(b); });
+$('shobject-again').addEventListener('click', startShapeObject);
+$('shobject-speak').addEventListener('click', () => play('q-shape', 'איזו צורה זו?'));
+$('shobject-pic').addEventListener('click', () => play('q-shape', 'איזו צורה זו?'));
+$('shobject-cards').addEventListener('click', e => { const b = e.target.closest('.namecard'); if (b) pickShapeObject(b); });
+$('shhunt-again').addEventListener('click', startShapeHunt);
+$('shhunt-speak').addEventListener('click', () => { if (shhunt) sayShape(shhunt.key); });
+$('shhunt-scene').addEventListener('click', e => pickShapeHunt(e.target.closest('.hunt-shape')));
+$('puzzle-again').addEventListener('click', () => { if (puzzle) startPuzzle(puzzle.kind); });
+$('pattern-again').addEventListener('click', () => { if (pattern) startPattern(pattern.level); });
+$('pattern-speak').addEventListener('click', () => play('q-next', 'מה בא אחר כך?'));
+$('pattern-cards').addEventListener('click', e => { const b = e.target.closest('.namecard'); if (b) pickPattern(b); });
+$('sort-again').addEventListener('click', () => { if (sorting) startSort(sorting.level); });
+$('sort-baskets').addEventListener('click', e => { const b = e.target.closest('.sort-basket'); if (b) pickSort(b); });
+$('size-again').addEventListener('click', () => { if (sizing) startSize(sizing.level); });
+$('size-speak').addEventListener('click', saySize);
+$('size-row').addEventListener('click', e => { const b = e.target.closest('.size-item'); if (b) pickSize(b); });
 $('song-btn').addEventListener('click', toggleSong);
 $('speak-btn').addEventListener('click', () => {
   if (trace) play(trace.audio, trace.letter.name);
