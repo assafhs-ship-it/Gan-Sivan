@@ -12,11 +12,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
   <!-- the site title only: a child's-handwriting font, loaded just for its letters -->
   <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@800&text=%D7%94%D7%92%D7%9F%20%D7%A9%D7%9C%20%D7%A1%D7%99%D7%95%D7%9F&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=4.6">
+  <link rel="stylesheet" href="styles.css?v=5.9">
 </head>
 <body>
 
-  <!-- Landing page: the three sections -->
+  <!-- Landing page: the four sections -->
   <section id="home" class="screen">
     <!-- The kindergarten's song: tap to play, tap again to stop -->
     <button class="song-btn" id="song-btn" type="button" aria-pressed="false" aria-label="לנגן את השיר של הגן">
@@ -27,28 +27,12 @@
       <span class="song-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
       <span class="song-float" aria-hidden="true">♪</span><span class="song-float" aria-hidden="true">♫</span><span class="song-float" aria-hidden="true">♪</span>
     </button>
-    <header class="hero">
-      <div class="hero-art">
-      <svg class="hero-rainbow" viewBox="0 0 200 124" aria-hidden="true">
-        <g fill="none" stroke-width="12.5">
-          <path d="M10,104 A90,90 0 0 1 190,104" stroke="#f25c54"/>
-          <path d="M22,104 A78,78 0 0 1 178,104" stroke="#ff9f43"/>
-          <path d="M34,104 A66,66 0 0 1 166,104" stroke="#ffd23f"/>
-          <path d="M46,104 A54,54 0 0 1 154,104" stroke="#4cc38a"/>
-          <path d="M58,104 A42,42 0 0 1 142,104" stroke="#3aa0e8"/>
-          <path d="M70,104 A30,30 0 0 1 130,104" stroke="#9b7bea"/>
-        </g>
-        <g fill="#ffffff">
-          <circle cx="16" cy="108" r="13"/><circle cx="34" cy="100" r="17"/><circle cx="54" cy="107" r="14"/><rect x="16" y="106" width="38" height="15" rx="7"/>
-          <circle cx="146" cy="107" r="14"/><circle cx="166" cy="100" r="17"/><circle cx="184" cy="108" r="13"/><rect x="146" y="106" width="38" height="15" rx="7"/>
-        </g>
-      </svg>
-      <div class="hero-avatar"><img src="images/sivan.png" alt="סיון" width="520" height="672"></div>
-      </div>
-      <h1>הגן של סיון</h1>
-      <p class="hero-sub">במה נשחק היום?</p>
-    </header>
-
+    <div class="home-sivan">
+      <div class="home-bubble"><b id="home-greeting">בוקר טוב!</b>במה נשחק היום?</div>
+      <button class="home-sivan-btn" id="sivan-hello" type="button" aria-label="סיון אומרת בוקר טוב"><img src="images/sivan.png" alt="סיון" width="520" height="672"></button>
+    </div>
+    <div class="home-main">
+      <h1 class="home-title" aria-label="הגן של סיון"><span style="--i:0">ה</span><span style="--i:1">ג</span><span style="--i:2">ן</span> <span style="--i:4">ש</span><span style="--i:5">ל</span> <span style="--i:7">ס</span><span style="--i:8">י</span><span style="--i:9">ו</span><span style="--i:10">ן</span></h1>
     <nav class="menu" aria-label="נושאים">
       <a class="menu-card" href="#abc">
         <span class="sparkle" aria-hidden="true">✨</span><span class="sparkle" aria-hidden="true">⭐</span>
@@ -65,12 +49,17 @@
         <span class="menu-icon menu-icon-text" aria-hidden="true">🔺⚪</span>
         <span class="menu-title">צורות</span>
       </a>
+      <a class="menu-card menu-teal" href="#think">
+        <span class="sparkle" aria-hidden="true">✨</span><span class="sparkle" aria-hidden="true">⭐</span>
+        <span class="menu-icon menu-icon-text" aria-hidden="true">💡</span>
+        <span class="menu-title">חשיבה</span>
+      </a>
     </nav>
-
     <footer class="version">
       <div>© 2026 אסף חובבי ציון · כל הזכויות שמורות</div>
       <div>גרסה <span id="version"></span></div>
     </footer>
+    </div>
   </section>
 
   <!-- Letters: menu of exercises -->
@@ -930,6 +919,137 @@
     </div>
   </section>
 
+  <!-- ===== Thinking ===== -->
+
+  <!-- Thinking: menu of exercises -->
+  <section id="think" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#" aria-label="לדף הבית">🏠</a>
+      <h2>חשיבה</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <nav class="menu menu-grid menu-cols-4" aria-label="תרגילי חשיבה">
+      <a class="menu-card menu-teal" href="#cats">
+        <span class="menu-icon" aria-hidden="true">🗂️</span>
+        <span class="menu-title">קטגוריות</span>
+      </a>
+      <a class="menu-card menu-orange" href="#opposites">
+        <span class="menu-icon" aria-hidden="true">🌗</span>
+        <span class="menu-title">הפכים</span>
+      </a>
+      <a class="menu-card menu-navy" href="#shadow">
+        <span class="menu-icon" aria-hidden="true">👤</span>
+        <span class="menu-title">צל של מי?</span>
+      </a>
+      <a class="menu-card menu-pink" href="#changed">
+        <span class="menu-icon" aria-hidden="true">👀</span>
+        <span class="menu-title">מה השתנה?</span>
+      </a>
+    </nav>
+  </section>
+
+  <!-- Categories -->
+  <section id="cats-game" class="screen num-game" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#think" aria-label="חזרה">✖</a>
+      <h2>קטגוריות</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <div class="dots" id="cats-dots" aria-hidden="true"></div>
+    <p class="game-hint">לאיזו קבוצה התמונה שייכת? מקשיבים ב־🔊 ובוחרים</p>
+    <div class="order-play" id="cats-play">
+      <button class="picture-card" id="cats-pic" type="button"></button>
+      <div class="rhyme-cards" id="cats-cards"></div>
+    </div>
+    <div class="order-done" id="cats-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="cats-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="opp-game" class="screen num-game" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#think" aria-label="חזרה">✖</a>
+      <h2>הפכים</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <div class="dots" id="opp-dots" aria-hidden="true"></div>
+    <p class="game-hint">מה ההפך? מקשיבים ב־🔊 ובוחרים</p>
+    <div class="order-play" id="opp-play">
+      <button class="picture-card" id="opp-pic" type="button"></button>
+      <div class="rhyme-cards" id="opp-cards"></div>
+    </div>
+    <div class="order-done" id="opp-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="opp-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="shadow-game" class="screen num-game" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#think" aria-label="חזרה">✖</a>
+      <h2>צל של מי?</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <div class="dots" id="shadow-dots" aria-hidden="true"></div>
+    <p class="game-hint">של מי הצל? בוחרים את התמונה המתאימה</p>
+    <div class="order-play" id="shadow-play">
+      <button class="picture-card" id="shadow-pic" type="button" aria-label="להשמיע את השאלה"></button>
+      <div class="first-choices" id="shadow-cards"></div>
+    </div>
+    <div class="order-done" id="shadow-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="shadow-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="changed" class="screen" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#think" aria-label="חזרה">✖</a>
+      <h2>מה השתנה?</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <p class="hint">כמה תמונות?</p>
+    <div class="level-menu">
+      <a class="level-card" href="#changed-3" aria-label="שלוש תמונות"><span class="level-num">3</span><span class="level-demo" aria-hidden="true"><i>🐶</i><i>🚗</i><i>🍎</i></span></a>
+      <a class="level-card" href="#changed-4" aria-label="ארבע תמונות"><span class="level-num">4</span><span class="level-demo" aria-hidden="true"><i>🐶</i><i>🚗</i><i>🍎</i><i>🎸</i></span></a>
+      <a class="level-card" href="#changed-6" aria-label="שש תמונות"><span class="level-num">6</span><span class="level-demo" aria-hidden="true"><i>🐶</i><i>🚗</i><i>🍎</i><i>🎸</i><i>👕</i></span></a>
+    </div>
+  </section>
+
+  <section id="changed-game" class="screen num-game" hidden>
+    <div class="topbar">
+      <a class="btn btn-round" href="#changed" aria-label="חזרה">✖</a>
+      <h2>מה השתנה?</h2>
+      <span class="topbar-spacer"></span>
+    </div>
+    <div class="dots" id="changed-dots" aria-hidden="true"></div>
+    <p class="game-hint" id="changed-hint">הסתכלו טוב על התמונות</p>
+    <div class="order-play" id="changed-play">
+      <div class="first-choices changed-row" id="changed-row"></div>
+    </div>
+    <div class="order-done" id="changed-done" hidden>
+      <div class="done-stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+      <div class="done-text">כל הכבוד!</div>
+      <div class="done-actions">
+        <button class="btn btn-go" id="changed-again" type="button">🔄 שוב</button>
+        <a class="btn" href="#" aria-label="לדף הבית">🏠</a>
+      </div>
+    </div>
+  </section>
+
   <!-- ===== Shapes ===== -->
 
   <!-- Shapes: menu of exercises -->
@@ -1473,6 +1593,6 @@
   <!-- Sivan's celebration, shown every few right answers -->
   <div class="cheer-layer" id="cheer" aria-live="polite"></div>
 
-  <script src="script.js?v=4.6"></script>
+  <script src="script.js?v=5.9"></script>
 </body>
 </html>

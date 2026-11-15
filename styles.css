@@ -86,36 +86,6 @@ body::before {
 
 /* ---------- Landing page ---------- */
 
-.hero { text-align: center; padding-top: 4vh; }
-/* Sivan's portrait stands in a round frame in front of the rainbow, her head rising out of the top */
-.hero-art { --w: clamp(220px, 42vw, 330px); position: relative; width: var(--w); margin: 0 auto calc(var(--w) * 0.05); animation: float 4s ease-in-out infinite; }
-.hero-rainbow { display: block; width: 100%; filter: drop-shadow(0 4px 0 rgba(43, 45, 91, 0.1)); }
-.hero-avatar {
-  --d: calc(var(--w) * 0.5);
-  position: absolute;
-  bottom: calc(var(--w) * -0.05);
-  left: 50%;
-  width: var(--d);
-  height: calc(var(--d) * 1.3);
-  translate: -50% 0;
-  border-radius: 0 0 calc(var(--d) / 2) calc(var(--d) / 2);   /* the bottom follows the round frame exactly */
-  overflow: hidden;
-}
-.hero-avatar::before, .hero-avatar::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: var(--d);
-  height: var(--d);
-  border-radius: 50%;
-  box-sizing: border-box;
-}
-.hero-avatar::before { background: linear-gradient(180deg, #e3f4ff, #ffffff); border: 5px solid var(--white); box-shadow: 0 0 0 2px rgba(43, 45, 91, 0.12) inset; }
-.hero-avatar::after { border: 5px solid var(--white); clip-path: inset(50% 0 0 0); }   /* the frame's front edge, over her shoulders */
-.hero-avatar img { position: absolute; bottom: 0; left: 50%; width: 88%; height: auto; translate: -50% 0; }
-.hero h1 { margin: 8px 0 0; font-family: 'Playpen Sans Hebrew', 'Varela Round', sans-serif; font-weight: 800; font-size: clamp(2.6rem, 9vw, 4.5rem); color: var(--navy); text-shadow: 0 3px 0 rgba(255, 255, 255, 0.9); }
-.hero-sub { margin: 6px 0 0; font-size: clamp(1.3rem, 4vw, 1.8rem); }
 
 .menu {
   flex: 1;
@@ -1777,6 +1747,60 @@ button.block.shake { animation: shake 0.4s ease; }
 .size-item.shake { animation: shake 0.4s ease; }
 .size-badge { position: absolute; top: -10px; right: -10px; min-width: 1.6em; border-radius: 50%; background: var(--green); color: var(--white); font-size: 1.4rem; line-height: 1.6em; text-align: center; }
 .size-badge:empty { display: none; }
+
+/* ---------- Thinking: categories ---------- */
+
+/* four sections on the landing page, two by two */
+#home .menu { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#home .menu-card { min-height: clamp(150px, 22dvh, 220px); }
+
+.think-img { display: block; width: 70%; height: auto; }
+.rhyme-pick.cat-pick { width: clamp(150px, 27vw, 250px); aspect-ratio: 1.2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 6px 6px 6px; }
+.cat-pics { display: flex; justify-content: center; align-items: center; gap: 2px; font-size: clamp(28px, 6vw, 54px); line-height: 1; }
+.cat-pics i { font-style: normal; display: grid; place-items: center; width: 1.15em; }
+.cat-pics .think-img { width: 0.95em; }
+.cat-name { color: var(--navy); font-size: clamp(1rem, 2.4vw, 1.5rem); line-height: 1.1; }
+
+/* ---------- Landing page: Sivan welcomes the children ---------- */
+
+/* Sivan stands large on one side with a speech bubble; the title and the four tiles are beside
+   her (below her on a tall screen). Tapping her makes her say "בוקר טוב". */
+#home[hidden] { display: none; }   /* the grid below must not un-hide the landing page */
+#home { display: grid; grid-template-areas: "sivan" "main"; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; gap: 6px; padding-bottom: 0; }
+.home-main { grid-area: main; display: flex; flex-direction: column; justify-content: center; gap: clamp(10px, 2.4dvh, 22px); padding-bottom: 8px; min-width: 0; }
+.home-main .menu { flex: none; padding: 0; gap: clamp(12px, 2vw, 18px); align-content: start; }
+.home-title { margin: 0; text-align: center; font-family: 'Playpen Sans Hebrew', 'Varela Round', sans-serif; font-weight: 800; font-size: clamp(2.4rem, 7.4vw, 3.9rem); line-height: 1.15; color: var(--navy); text-shadow: 0 3px 0 rgba(255, 255, 255, 0.9); }
+.home-title span { display: inline-block; animation: title-drop 0.6s cubic-bezier(0.3, 1.6, 0.5, 1) calc(var(--i) * 0.07s) both; }
+.home-sivan { grid-area: sivan; display: flex; align-items: flex-end; justify-content: center; gap: 4px; padding-inline-start: 70px; min-height: 0; }
+.home-sivan-btn { flex: none; height: clamp(150px, 26dvh, 240px); padding: 0; border: 0; background: none; cursor: pointer; touch-action: manipulation; }
+.home-sivan-btn img { display: block; height: 100%; width: auto; transform-origin: 50% 100%; animation: sivan-sway 3s ease-in-out infinite; }
+.home-sivan-btn.hello img { animation: bounce 0.5s ease 2; }
+.home-sivan-btn:focus-visible { outline: 4px solid var(--navy); outline-offset: 4px; border-radius: 20px; }
+.home-bubble { align-self: center; padding: 12px 22px; border-radius: 30px 30px 30px 8px; background: var(--white); box-shadow: 0 7px 0 rgba(43, 45, 91, 0.12); font-size: clamp(1.1rem, 3vw, 1.6rem); line-height: 1.3; animation: pop 0.5s ease 0.5s both; }
+.home-bubble b { display: block; font-family: 'Playpen Sans Hebrew', 'Varela Round', sans-serif; font-weight: 800; color: var(--coral); font-size: 1.35em; }
+#home .version { font-size: 0.8rem; color: #8a8cab; }
+@keyframes title-drop { from { transform: translateY(-50px) rotate(-12deg); opacity: 0; } }
+@keyframes sivan-sway { 50% { transform: rotate(-2deg); } }
+
+/* wide screens: Sivan stands on the right at full height, everything else on the left */
+@media (min-width: 900px) and (min-height: 560px) {
+  /* the page spans the whole window so Sivan can stand at its right edge */
+  #home { max-width: none; grid-template-areas: "sivan main"; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: 1fr; gap: 20px; padding-inline-start: 0; overflow-x: clip; }
+  .home-main { width: 100%; max-width: 680px; margin: 0 auto; }
+  .home-sivan { position: relative; flex-direction: column; align-items: flex-start; justify-content: flex-end; padding-inline-start: 0; margin-inline-start: 3vw; }
+  .home-sivan-btn { height: min(70dvh, 620px); }
+  .home-bubble { align-self: flex-end; margin: 0 0 -9% -17%; translate: 0 -56px;   /* up beside the title, clear of her head and of the tiles */ border-radius: 34px 34px 8px 34px; z-index: 1; }
+}
+
+/* ---------- Thinking: opposites, shadows, what changed ---------- */
+
+.opp-pick .think-img { width: 66%; }
+.silhouette { display: block; filter: brightness(0); opacity: 0.85; transition: filter 0.7s ease, opacity 0.7s ease; }
+.silhouette.lit { filter: none; opacity: 1; }
+.pic.off { opacity: 0.35; cursor: default; }
+.pic.right { --frame: var(--green); background: #e6f8ee; transform: scale(1.08); }
+.pic.cover { --frame: var(--purple); background: var(--purple); animation: pop 0.3s ease; }
+.changed-row { --tile: clamp(70px, 13.5vw, 150px); flex-wrap: wrap; }
 
 /* ---------- Confetti ---------- */
 

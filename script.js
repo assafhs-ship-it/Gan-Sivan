@@ -1,4 +1,4 @@
-const APP_VERSION = '4.6';
+const APP_VERSION = '5.9';
 
 // Each letter is drawn on a 200x200 board. `strokes` are SVG paths, in the
 // order the child writes them; each path runs in the writing direction.
@@ -3330,6 +3330,364 @@ function pickSize(btn) {
   }, 1800);
 }
 
+// ---------- Categories (חשיבה) ----------
+
+// A picture is shown and named; the child picks which of three categories it belongs to. Each
+// category card shows three of its pictures and its name (for the teacher), with its own 🔊.
+// Sounds: audio/cats/<key>.m4a is the category's name, audio/cats/<key>-<n>.m4a its n-th item.
+// A picture is an emoji, or 'img:<name>' for a drawing in images/think/.
+const CATEGORIES = [
+  { key: 'toys', name: 'צעצועים', items: [['🧸', 'דובי'], ['🪀', 'יויו'], ['🪁', 'עפיפון'], ['🧩', 'פאזל'], ['🎲', 'קובייה'], ['🎈', 'בלון'], ['🤖', 'רובוט']] },
+  { key: 'animals', name: 'בעלי חיים', items: [['🐶', 'כלב'], ['🐱', 'חתול'], ['🐘', 'פיל'], ['🦁', 'אריה'], ['🐟', 'דג'], ['🦋', 'פרפר'], ['🐢', 'צב'], ['🐸', 'צפרדע']] },
+  { key: 'furniture', name: 'רהיטים', items: [['🛏️', 'מיטה'], ['🪑', 'כיסא'], ['🛋️', 'ספה'], ['img:table', 'שולחן'], ['img:cupboard', 'ארון'], ['img:shelf', 'מדף']] },
+  { key: 'food', name: 'מאכלים', items: [['🍕', 'פיצה'], ['🍞', 'לחם'], ['🧀', 'גבינה'], ['🥚', 'ביצה'], ['🍝', 'פסטה'], ['🍦', 'גלידה'], ['🍪', 'עוגייה']] },
+  { key: 'vehicles', name: 'כלי רכב', items: [['🚗', 'מכונית'], ['🚌', 'אוטובוס'], ['✈️', 'מטוס'], ['🚲', 'אופניים'], ['🚂', 'רכבת'], ['⛵', 'סירה'], ['🚁', 'מסוק']] },
+  { key: 'plants', name: 'צמחים', items: [['🌳', 'עץ'], ['🌵', 'קקטוס'], ['🌻', 'חמנייה'], ['🌷', 'צבעוני'], ['🌴', 'דקל'], ['🌹', 'ורד']] },
+  { key: 'clothes', name: 'בגדים', items: [['👕', 'חולצה'], ['👖', 'מכנסיים'], ['👗', 'שמלה'], ['🧦', 'גרביים'], ['👟', 'נעל'], ['🧢', 'כובע'], ['🧤', 'כפפות']] },
+  { key: 'fruit', name: 'פירות', items: [['🍎', 'תפוח'], ['🍌', 'בננה'], ['🍇', 'ענבים'], ['🍓', 'תות'], ['🍉', 'אבטיח'], ['🍊', 'תפוז']] },
+  { key: 'veg', name: 'ירקות', items: [['🥕', 'גזר'], ['🥒', 'מלפפון'], ['🌽', 'תירס'], ['🥦', 'ברוקולי'], ['🍅', 'עגבנייה'], ['🍆', 'חציל']] },
+  { key: 'music', name: 'כלי נגינה', items: [['🎸', 'גיטרה'], ['🥁', 'תוף'], ['🎹', 'פסנתר'], ['🎺', 'חצוצרה'], ['🎻', 'כינור']] },
+  { key: 'body', name: 'חלקי גוף', items: [['👃', 'אף'], ['👂', 'אוזן'], ['✋', 'יד'], ['🦶', 'רגל'], ['👁️', 'עין'], ['🦷', 'שן'], ['👄', 'פה']] },
+  { key: 'writing', name: 'כלי כתיבה', items: [['✏️', 'עיפרון'], ['🖍️', 'צבע'], ['🖊️', 'עט'], ['📏', 'סרגל'], ['🖌️', 'מכחול']] },
+  { key: 'dishes', name: 'סכו״ם', items: [['🥄', 'כף'], ['🍴', 'מזלג וסכין'], ['🔪', 'סכין']] },
+];
+// Categories that overlap in a child's mind are never offered together as answers.
+const CAT_CLASH = [['food', 'fruit'], ['food', 'veg'], ['plants', 'fruit'], ['plants', 'veg'], ['food', 'dishes']];
+const catsClash = (a, b) => CAT_CLASH.some(([x, y]) => (a === x && b === y) || (a === y && b === x));
+const catPic = pic => pic.startsWith('img:') ? `<img class="think-img" src="images/think/${pic.slice(4)}.svg" alt="">` : pic;
+
+let cats = null;
+
+function startCats() {
+  cats = { round: 0, used: [], cat: -1, item: 0, locked: false };
+  $('cats-done').hidden = true;
+  $('cats-play').hidden = false;
+  preload('bravo');
+  nextCatsRound();
+}
+
+function nextCatsRound() {
+  const c = cats;
+  const all = CATEGORIES.map((_, k) => k);
+  c.cat = pickOne(all.filter(k => !c.used.includes(k)));
+  c.used.push(c.cat);
+  c.item = Math.floor(Math.random() * CATEGORIES[c.cat].items.length);
+  c.locked = false;
+
+  const wrong = [];
+  for (const k of shuffle(all)) {   // two other categories that clash with nothing chosen so far
+    if (k === c.cat || [c.cat, ...wrong].some(o => catsClash(CATEGORIES[o].key, CATEGORIES[k].key))) continue;
+    wrong.push(k);
+    if (wrong.length === 2) break;
+  }
+  const [pic, word] = CATEGORIES[c.cat].items[c.item];
+
+  renderDots('cats-dots', c.round, NUM_ROUNDS);
+  $('cats-pic').innerHTML = catPic(pic);
+  $('cats-pic').setAttribute('aria-label', `להשמיע: ${word}`);
+  $('cats-cards').innerHTML = shuffle([c.cat, ...wrong]).map(k => {
+    const cat = CATEGORIES[k];
+    return `<div class="rhyme-card" data-k="${k}"><button class="rhyme-pick cat-pick" type="button" data-k="${k}" aria-label="${cat.name}">` +
+      `<span class="cat-pics" aria-hidden="true">${cat.items.slice(0, 3).map(i => `<i>${catPic(i[0])}</i>`).join('')}</span>` +
+      `<span class="cat-name">${cat.name}</span></button>` +
+      `<button class="rhyme-say" type="button" data-say="${k}" aria-label="להשמיע: ${cat.name}">🔊</button></div>`;
+  }).join('');
+
+  preload(`cats/${CATEGORIES[c.cat].key}-${c.item + 1}`);
+  [c.cat, ...wrong].forEach(k => preload(`cats/${CATEGORIES[k].key}`));
+  setTimeout(() => { if (cats === c && !c.locked) sayCatItem(); }, 400);
+}
+
+function sayCatItem() {
+  if (!cats) return;
+  const cat = CATEGORIES[cats.cat];
+  play(`cats/${cat.key}-${cats.item + 1}`, cat.items[cats.item][1]);
+}
+
+function sayCat(k) {
+  play(`cats/${CATEGORIES[k].key}`, CATEGORIES[k].name);
+}
+
+function pickCat(btn) {
+  const c = cats;
+  const card = btn.closest('.rhyme-card');
+  if (!c || c.locked || card.classList.contains('off')) return;
+
+  if (+btn.dataset.k !== c.cat) {
+    boop();
+    restartAnimation(card, 'shake');
+    card.classList.add('off');
+    return;
+  }
+
+  // Right: say the pair, the picture's name and then its category.
+  c.locked = true;
+  c.round++;
+  card.classList.add('right');
+  $('cats-cards').querySelectorAll('.rhyme-card:not(.right)').forEach(x => x.classList.add('off'));
+  ding();
+  renderDots('cats-dots', c.round, NUM_ROUNDS);
+  setTimeout(() => { if (cats === c) sayCatItem(); }, 400);
+  setTimeout(() => { if (cats === c) sayCat(c.cat); }, 1400);
+  setTimeout(() => {
+    if (cats !== c) return;
+    if (c.round >= NUM_ROUNDS) finishGame('cats');
+    else nextCatsRound();
+  }, 3100);
+}
+
+// ---------- Opposites ----------
+
+// A picture and its word ("חם"); the child picks its opposite from three picture cards, each with
+// its own 🔊. Pairs are [picture, word] twice; sounds are audio/opp/<n>-a.m4a and <n>-b.m4a.
+const OPPOSITES = [
+  [['☀️', 'יום'], ['🌙', 'לילה']],
+  [['🔥', 'חם'], ['❄️', 'קר']],
+  [['😀', 'שמח'], ['😢', 'עצוב']],
+  [['🐘', 'גדול'], ['🐜', 'קטן']],
+  [['🐇', 'מהיר'], ['🐢', 'איטי']],
+  [['⬆️', 'למעלה'], ['⬇️', 'למטה']],
+  [['📖', 'פתוח'], ['📕', 'סגור']],
+  [['img:glass-full', 'מלא'], ['img:glass-empty', 'ריק']],
+  [['img:pencil-long', 'ארוך'], ['img:pencil-short', 'קצר']],
+  [['⚪', 'לבן'], ['⚫', 'שחור']],
+  [['img:many', 'הרבה'], ['img:few', 'מעט']],
+  [['📢', 'רועש'], ['🤫', 'שקט']],
+  [['🏖️', 'קיץ'], ['⛄', 'חורף']],
+  [['👴', 'זקן'], ['👶', 'צעיר']],
+];
+const oppAudio = (pair, side) => `opp/${pair + 1}-${side ? 'b' : 'a'}`;
+
+let opp = null;
+
+function startOpposites() {
+  opp = { round: 0, used: [], pair: -1, side: 0, locked: false };
+  $('opp-done').hidden = true;
+  $('opp-play').hidden = false;
+  preload('bravo');
+  preload('q-opp');
+  nextOppRound();
+}
+
+function nextOppRound() {
+  const o = opp;
+  const all = OPPOSITES.map((_, k) => k);
+  o.pair = pickOne(all.filter(k => !o.used.includes(k)));
+  o.used.push(o.pair);
+  o.side = Math.random() < 0.5 ? 0 : 1;
+  o.locked = false;
+  const others = shuffle(all.filter(k => k !== o.pair)).slice(0, 2).map(k => [k, Math.random() < 0.5 ? 0 : 1]);
+  const choices = shuffle([[o.pair, 1 - o.side], ...others]);
+
+  renderDots('opp-dots', o.round, NUM_ROUNDS);
+  $('opp-pic').innerHTML = catPic(OPPOSITES[o.pair][o.side][0]);
+  $('opp-pic').setAttribute('aria-label', `להשמיע: ${OPPOSITES[o.pair][o.side][1]}`);
+  $('opp-cards').innerHTML = choices.map(([k, side]) => {
+    const [pic, word] = OPPOSITES[k][side];
+    return `<div class="rhyme-card" data-id="${k}-${side}"><button class="rhyme-pick opp-pick" type="button" data-id="${k}-${side}" aria-label="${word}">${catPic(pic)}</button>` +
+      `<button class="rhyme-say" type="button" data-say="${k}-${side}" aria-label="להשמיע: ${word}">🔊</button></div>`;
+  }).join('');
+
+  [[o.pair, o.side], ...choices].forEach(([k, side]) => preload(oppAudio(k, side)));
+  // "מה ההפך של…" and then the word
+  setTimeout(() => { if (opp === o && !o.locked) play('q-opp', 'מה ההפך של'); }, 400);
+  setTimeout(() => { if (opp === o && !o.locked) sayOppWord(); }, 1700);
+}
+
+function sayOpp(k, side) {
+  play(oppAudio(k, side), OPPOSITES[k][side][1]);
+}
+
+function sayOppWord() {
+  if (opp) sayOpp(opp.pair, opp.side);
+}
+
+function pickOpp(btn) {
+  const o = opp;
+  const card = btn.closest('.rhyme-card');
+  if (!o || o.locked || card.classList.contains('off')) return;
+
+  if (btn.dataset.id !== `${o.pair}-${1 - o.side}`) {
+    boop();
+    restartAnimation(card, 'shake');
+    card.classList.add('off');
+    return;
+  }
+
+  // Right: say the pair, the word and then its opposite.
+  o.locked = true;
+  o.round++;
+  card.classList.add('right');
+  $('opp-cards').querySelectorAll('.rhyme-card:not(.right)').forEach(x => x.classList.add('off'));
+  ding();
+  renderDots('opp-dots', o.round, NUM_ROUNDS);
+  setTimeout(() => { if (opp === o) sayOppWord(); }, 400);
+  setTimeout(() => { if (opp === o) sayOpp(o.pair, 1 - o.side); }, 1400);
+  setTimeout(() => {
+    if (opp !== o) return;
+    if (o.round >= NUM_ROUNDS) finishGame('opp');
+    else nextOppRound();
+  }, 3000);
+}
+
+// ---------- Whose shadow? ----------
+
+// A black silhouette (the emoji with its brightness turned to zero) and three pictures; the child
+// picks whose shadow it is. Pictures with a clear outline only, taken from the categories game so
+// their names are already recorded: [picture, word, sound].
+const SHADOWS = [
+  ['🐘', 'פיל', 'cats/animals-3'], ['🐟', 'דג', 'cats/animals-5'], ['🦋', 'פרפר', 'cats/animals-6'], ['🐢', 'צב', 'cats/animals-7'], ['🚗', 'מכונית', 'cats/vehicles-1'],
+  ['🚌', 'אוטובוס', 'cats/vehicles-2'], ['✈️', 'מטוס', 'cats/vehicles-3'], ['🚲', 'אופניים', 'cats/vehicles-4'], ['🚂', 'רכבת', 'cats/vehicles-5'], ['⛵', 'סירה', 'cats/vehicles-6'],
+  ['🚁', 'מסוק', 'cats/vehicles-7'], ['🌳', 'עץ', 'cats/plants-1'], ['🌵', 'קקטוס', 'cats/plants-2'], ['🌻', 'חמנייה', 'cats/plants-3'], ['🌷', 'צבעוני', 'cats/plants-4'],
+  ['🌴', 'דקל', 'cats/plants-5'], ['🧸', 'דובי', 'cats/toys-1'], ['🪁', 'עפיפון', 'cats/toys-3'], ['🎈', 'בלון', 'cats/toys-6'], ['🤖', 'רובוט', 'cats/toys-7'],
+  ['👕', 'חולצה', 'cats/clothes-1'], ['👖', 'מכנסיים', 'cats/clothes-2'], ['👗', 'שמלה', 'cats/clothes-3'], ['🧦', 'גרביים', 'cats/clothes-4'], ['👟', 'נעל', 'cats/clothes-5'],
+  ['🧤', 'כפפות', 'cats/clothes-7'], ['🍌', 'בננה', 'cats/fruit-2'], ['🍇', 'ענבים', 'cats/fruit-3'], ['🍓', 'תות', 'cats/fruit-4'], ['🥕', 'גזר', 'cats/veg-1'],
+  ['🥦', 'ברוקולי', 'cats/veg-4'], ['🎸', 'גיטרה', 'cats/music-1'], ['🎺', 'חצוצרה', 'cats/music-4'], ['🎻', 'כינור', 'cats/music-5'], ['🛏️', 'מיטה', 'cats/furniture-1'],
+  ['🪑', 'כיסא', 'cats/furniture-2'], ['🥄', 'כף', 'cats/dishes-1'], ['☕', 'ספל', 'cats/mug'],
+];
+
+let shadow = null;
+
+function startShadow() {
+  shadow = { round: 0, used: [], item: -1, locked: false };
+  $('shadow-done').hidden = true;
+  $('shadow-play').hidden = false;
+  preload('bravo');
+  preload('q-shadow');
+  nextShadowRound();
+}
+
+function nextShadowRound() {
+  const s = shadow;
+  const all = SHADOWS.map((_, k) => k);
+  s.item = pickOne(all.filter(k => !s.used.includes(k)));
+  s.used.push(s.item);
+  s.locked = false;
+  const choices = shuffle([s.item, ...shuffle(all.filter(k => k !== s.item)).slice(0, 2)]);
+
+  renderDots('shadow-dots', s.round, NUM_ROUNDS);
+  $('shadow-pic').innerHTML = `<span class="silhouette">${SHADOWS[s.item][0]}</span>`;
+  $('shadow-cards').innerHTML = choices.map(k =>
+    `<button class="pic" type="button" data-k="${k}" aria-label="${SHADOWS[k][1]}">${SHADOWS[k][0]}</button>`).join('');
+  preload(SHADOWS[s.item][2]);
+  setTimeout(() => { if (shadow === s && !s.locked) play('q-shadow', 'צל של מי?'); }, 400);
+}
+
+function pickShadow(btn) {
+  const s = shadow;
+  if (!s || s.locked || btn.classList.contains('off')) return;
+  if (+btn.dataset.k !== s.item) {
+    boop();
+    restartAnimation(btn, 'shake');
+    btn.classList.add('off');
+    return;
+  }
+  // Right: the shadow lights up into the real picture, and its name is said.
+  s.locked = true;
+  s.round++;
+  btn.classList.add('right');
+  $('shadow-pic').firstElementChild.classList.add('lit');
+  ding();
+  renderDots('shadow-dots', s.round, NUM_ROUNDS);
+  setTimeout(() => { if (shadow === s) play(SHADOWS[s.item][2], SHADOWS[s.item][1]); }, 400);
+  setTimeout(() => {
+    if (shadow !== s) return;
+    if (s.round >= NUM_ROUNDS) finishGame('shadow');
+    else nextShadowRound();
+  }, 2400);
+}
+
+// ---------- What changed? ----------
+
+// A row of pictures to look at; they are covered for a moment and one of them is swapped for a
+// new picture; the child taps the one that changed. `level` is the number of pictures.
+const CHANGE_POOL = CATEGORIES.flatMap(c => c.items.map(([pic, word], n) => ({ pic, word, cat: c.key, audio: `cats/${c.key}-${n + 1}` })))
+  .filter(it => !it.pic.startsWith('img:'));
+
+let changed = null;
+
+function startChanged(level) {
+  changed = { level, round: 0, items: [], at: -1, locked: true };
+  $('changed-done').hidden = true;
+  $('changed-play').hidden = false;
+  preload('bravo');
+  ['q-look', 'q-changed'].forEach(preload);
+  nextChangedRound();
+}
+
+function renderChanged(cover) {
+  $('changed-row').innerHTML = changed.items.map((it, k) => cover
+    ? '<button class="pic cover" type="button" disabled>🙈</button>'
+    : `<button class="pic" type="button" data-k="${k}" aria-label="${it.word}">${it.pic}</button>`).join('');
+}
+
+function nextChangedRound() {
+  const c = changed;
+  // One picture per category, so the pictures are easy to tell apart.
+  const cats = shuffle([...new Set(CHANGE_POOL.map(it => it.cat))]).slice(0, c.level + 1);
+  const picks = cats.map(cat => pickOne(CHANGE_POOL.filter(it => it.cat === cat)));
+  c.items = picks.slice(0, c.level);
+  const fresh = picks[c.level];
+  c.at = Math.floor(Math.random() * c.level);
+  c.locked = true;
+
+  renderDots('changed-dots', c.round, NUM_ROUNDS);
+  renderChanged(false);
+  $('changed-hint').textContent = 'הסתכלו טוב על התמונות';
+  setTimeout(() => { if (changed === c) play('q-look', 'הסתכלו טוב'); }, 400);
+  const look = 2600 + c.level * 500;
+  setTimeout(() => { if (changed === c) { renderChanged(true); popSound(); } }, look);
+  setTimeout(() => {
+    if (changed !== c) return;
+    c.items[c.at] = fresh;
+    renderChanged(false);
+    $('changed-hint').textContent = 'מה השתנה? לוחצים על התמונה החדשה';
+    preload(fresh.audio);
+    play('q-changed', 'מה השתנה?');
+    c.locked = false;
+  }, look + 1500);
+}
+
+function pickChanged(btn) {
+  const c = changed;
+  if (!c || c.locked || btn.classList.contains('off')) return;
+  if (+btn.dataset.k !== c.at) {
+    boop();
+    restartAnimation(btn, 'shake');
+    btn.classList.add('off');
+    return;
+  }
+  c.locked = true;
+  c.round++;
+  btn.classList.add('right');
+  ding();
+  renderDots('changed-dots', c.round, NUM_ROUNDS);
+  setTimeout(() => { if (changed === c) play(c.items[c.at].audio, c.items[c.at].word); }, 400);
+  setTimeout(() => {
+    if (changed !== c) return;
+    if (c.round >= NUM_ROUNDS) finishGame('changed');
+    else nextChangedRound();
+  }, 2300);
+}
+
+// ---------- Greeting ----------
+
+// Sivan's greeting on the landing page follows the clock: morning 05–12, noon 12–17, evening otherwise.
+function greeting() {
+  const h = new Date().getHours();
+  if (h >= 5 && h < 12) return ['בוקר טוב', 'hello'];
+  if (h >= 12 && h < 17) return ['צהריים טובים', 'hello-noon'];
+  return ['ערב טוב', 'hello-evening'];
+}
+
+// Puts the current greeting in the speech bubble and returns it.
+function showGreeting() {
+  const g = greeting();
+  $('home-greeting').textContent = `${g[0]}!`;
+  $('sivan-hello').setAttribute('aria-label', `סיון אומרת ${g[0]}`);
+  return g;
+}
+
 // ---------- Song ----------
 
 // The kindergarten's song plays on the landing page only, so it never talks over an exercise.
@@ -3430,6 +3788,11 @@ function route() {
   const numOrder = hash.match(/^numorder-(10|20)$/);
   beats = null;
   road = null;
+  cats = null;
+  opp = null;
+  shadow = null;
+  changed = null;
+  const changedLevel = hash.match(/^changed-([346])$/);
   shfind = null;
   shobject = null;
   shhunt = null;
@@ -3451,7 +3814,21 @@ function route() {
   lift = null;
   const spellLevel = hash.match(/^spell-([12])$/);
   const hiddenLevel = hash.match(/^hidden-([12])$/);
-  if (shapeLevel) {
+  if (hash === 'opposites') {
+    show('opp-game');
+    startOpposites();
+  } else if (hash === 'shadow') {
+    show('shadow-game');
+    startShadow();
+  } else if (changedLevel) {
+    show('changed-game');
+    startChanged(+changedLevel[1]);
+  } else if (hash === 'think' || hash === 'changed') {
+    show(hash);
+  } else if (hash === 'cats') {
+    show('cats-game');
+    startCats();
+  } else if (shapeLevel) {
     const [, kind, lv] = shapeLevel;
     const n = +lv;
     if (kind === 'shnames') { show('names-game'); startNames({ items: SHAPE_ITEMS, level: n, title: 'שמות הצורות', back: '#shnames' }); }
@@ -3602,6 +3979,7 @@ function route() {
     show('all');
     renderAll();
   } else {
+    showGreeting();
     show('home');
   }
 }
@@ -3776,7 +4154,34 @@ $('sort-baskets').addEventListener('click', e => { const b = e.target.closest('.
 $('size-again').addEventListener('click', () => { if (sizing) startSize(sizing.level); });
 $('size-speak').addEventListener('click', saySize);
 $('size-row').addEventListener('click', e => { const b = e.target.closest('.size-item'); if (b) pickSize(b); });
+$('cats-again').addEventListener('click', startCats);
+$('cats-pic').addEventListener('click', sayCatItem);
+$('cats-cards').addEventListener('click', e => {
+  const say = e.target.closest('.rhyme-say');
+  if (say) { sayCat(+say.dataset.say); return; }
+  const pick = e.target.closest('.cat-pick');
+  if (pick) pickCat(pick);
+});
+$('opp-again').addEventListener('click', startOpposites);
+$('opp-pic').addEventListener('click', sayOppWord);
+$('opp-cards').addEventListener('click', e => {
+  const say = e.target.closest('.rhyme-say');
+  if (say) { sayOpp(...say.dataset.say.split('-').map(Number)); return; }
+  const pick = e.target.closest('.opp-pick');
+  if (pick) pickOpp(pick);
+});
+$('shadow-again').addEventListener('click', startShadow);
+$('shadow-pic').addEventListener('click', () => play('q-shadow', 'צל של מי?'));
+$('shadow-cards').addEventListener('click', e => { const b = e.target.closest('.pic'); if (b) pickShadow(b); });
+$('changed-again').addEventListener('click', () => { if (changed) startChanged(changed.level); });
+$('changed-row').addEventListener('click', e => { const b = e.target.closest('.pic'); if (b) pickChanged(b); });
 $('song-btn').addEventListener('click', toggleSong);
+// Tapping Sivan on the landing page: she bounces and says the greeting for this time of day.
+$('sivan-hello').addEventListener('click', () => {
+  const [text, audio] = showGreeting();
+  restartAnimation($('sivan-hello'), 'hello');
+  play(audio, text);
+});
 $('speak-btn').addEventListener('click', () => {
   if (trace) play(trace.audio, trace.letter.name);
 });
