@@ -1,4 +1,4 @@
-const APP_VERSION = '5.9';
+const APP_VERSION = '6.2';
 
 // Each letter is drawn on a 200x200 board. `strokes` are SVG paths, in the
 // order the child writes them; each path runs in the writing direction.
@@ -3489,8 +3489,8 @@ function nextOppRound() {
   }).join('');
 
   [[o.pair, o.side], ...choices].forEach(([k, side]) => preload(oppAudio(k, side)));
-  // "מה ההפך של…" and then the word
-  setTimeout(() => { if (opp === o && !o.locked) play('q-opp', 'מה ההפך של'); }, 400);
+  // "מה ההפך מ…" and then the word
+  setTimeout(() => { if (opp === o && !o.locked) play('q-opp', 'מה ההפך מ'); }, 400);
   setTimeout(() => { if (opp === o && !o.locked) sayOppWord(); }, 1700);
 }
 
@@ -3570,7 +3570,7 @@ function nextShadowRound() {
   $('shadow-cards').innerHTML = choices.map(k =>
     `<button class="pic" type="button" data-k="${k}" aria-label="${SHADOWS[k][1]}">${SHADOWS[k][0]}</button>`).join('');
   preload(SHADOWS[s.item][2]);
-  setTimeout(() => { if (shadow === s && !s.locked) play('q-shadow', 'צל של מי?'); }, 400);
+  setTimeout(() => { if (shadow === s && !s.locked) play('q-shadow', 'צל של מה?'); }, 400);
 }
 
 function pickShadow(btn) {
@@ -4171,7 +4171,7 @@ $('opp-cards').addEventListener('click', e => {
   if (pick) pickOpp(pick);
 });
 $('shadow-again').addEventListener('click', startShadow);
-$('shadow-pic').addEventListener('click', () => play('q-shadow', 'צל של מי?'));
+$('shadow-pic').addEventListener('click', () => play('q-shadow', 'צל של מה?'));
 $('shadow-cards').addEventListener('click', e => { const b = e.target.closest('.pic'); if (b) pickShadow(b); });
 $('changed-again').addEventListener('click', () => { if (changed) startChanged(changed.level); });
 $('changed-row').addEventListener('click', e => { const b = e.target.closest('.pic'); if (b) pickChanged(b); });
